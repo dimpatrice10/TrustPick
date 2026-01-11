@@ -1,0 +1,9 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # Route requests to /assets/... to the local PHP proxy so files
+  # stored in the project root `assets/` (outside public/) can be served.
+  RewriteRule ^assets/(.*)$ assets/index.php?f=$1 [L,QSA]
+
+  # Fallback: existing front controller behaviour is handled by root rules
+</IfModule>

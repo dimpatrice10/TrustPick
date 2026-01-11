@@ -1,11 +1,16 @@
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
-  
+
+  # Exclure explicitement les dossiers d'assets pour s'assurer
+  # que les fichiers statiques (CSS/JS/images/fonts) sont servis
+  # directement et ne sont pas réécrits vers index.php.
+  RewriteRule ^(assets|fonts|img|images|uploads|css|js)/ - [L]
+
   # Ne pas toucher aux fichiers et dossiers existants
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
-  
-  # Rediriger toutes les requêtes vers index.php
+
+  # Rediriger toutes les autres requêtes vers index.php
   RewriteRule ^(.*)$ index.php [QSA,L]
 </IfModule>

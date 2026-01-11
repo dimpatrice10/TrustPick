@@ -1,6 +1,6 @@
 <IfModule mod_rewrite.c>
   RewriteEngine On
-  RewriteBase /TrustPick/
+  RewriteBase /
   
   # Ne pas toucher aux fichiers et dossiers existants
   RewriteCond %{REQUEST_FILENAME} !-f

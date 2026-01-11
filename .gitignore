@@ -47,7 +47,7 @@ gulpfile.tmp.*
 # Excludes generated 
 /dist
 /build
-/tmp
+/tmp 
 /temp
 
 # Assets

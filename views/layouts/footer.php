@@ -11,8 +11,8 @@
     </nav>
   </div>
 </footer>
-<script src="/TrustPick/assets/js/app.js"></script>
-<script src="/TrustPick/assets/js/ui-enhancements.js"></script>
+<script src="<?= url('assets/js/app.js') ?>"></script>
+<script src="<?= url('assets/js/ui-enhancements.js') ?>"></script>
 </body>
 
 </html>

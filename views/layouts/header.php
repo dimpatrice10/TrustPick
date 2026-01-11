@@ -15,10 +15,10 @@ require_once __DIR__ . '/../../includes/db.php';
   <link
     href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap"
     rel="stylesheet">
-  <link rel="stylesheet" href="/TrustPick/assets/css/demo.css">
-  <link rel="stylesheet" href="/TrustPick/assets/css/app.css">
-  <link rel="stylesheet" href="/TrustPick/assets/css/ui-enhancements.css">
-  <script src="/TrustPick/assets/js/api-client.js"></script>
+  <link rel="stylesheet" href="<?= url('assets/css/demo.css') ?>">
+  <link rel="stylesheet" href="<?= url('assets/css/app.css') ?>">
+  <link rel="stylesheet" href="<?= url('assets/css/ui-enhancements.css') ?>">
+  <!-- api-client.js removed: not present in assets; avoid 404 that returns HTML -->
 </head>
 
 <body>
@@ -44,7 +44,7 @@ require_once __DIR__ . '/../../includes/db.php';
     <div class="container header-inner">
       <a class="logo" href="<?= url('index.php?page=home') ?>" aria-label="TrustPick accueil"
         style="display:flex;align-items:center;gap:8px">
-        <img src="/TrustPick/assets/img/logo.png" alt="TrustPick Logo" style="height:40px;width:auto">
+        <img src="<?= url('assets/img/logo.png') ?>" alt="TrustPick Logo" style="height:40px;width:auto">
         <!-- <span style="font-weight:800;font-family:Poppins;font-size:18px;background:linear-gradient(135deg,#0066cc,#1ab991);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">TrustPick</span> -->
       </a>
       <!-- <div class="search-wrap">

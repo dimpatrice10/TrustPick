@@ -1,6 +1,0 @@
-http://localhost/TrustPick/	200	Articles:4	Length:26583
-http://localhost/TrustPick/public/index.php?page=catalog	200	Articles:8	Length:13059
-http://localhost/TrustPick/public/index.php?page=product&id=1	200	Articles:2	Length:10427
-http://localhost/TrustPick/public/index.php?page=company&id=1	200	Articles:3	Length:6566
-http://localhost/TrustPick/public/index.php?page=login	200	Articles:0	Length:5525
-http://localhost/TrustPick/public/index.php?page=register	200	Articles:0	Length:6501

@@ -14,7 +14,7 @@ $topProducts = $pdo->query('SELECT * FROM products ORDER BY created_at DESC LIMI
 
 <main class="container">
   <section class="hero fade-up"
-    style="background:linear-gradient(135deg,#f0f5ff 0%,#fffaf0 50%,#f0fff4 100%);border:none;border-radius:20px;position:relative;overflow:hidden;padding:80px 56px">
+    style="background:linear-gradient(135deg,#f0f5ff 0%,#fffaf0 50%,#f0fff4 100%);border:none;border-radius:20px;position:relative;overflow:hidden;padding:10px">
     <div
       style="position:absolute;top:-80px;right:-80px;width:300px;height:300px;background:radial-gradient(circle,rgba(0,102,204,0.1),transparent);border-radius:50%;z-index:0">
     </div>
@@ -80,7 +80,7 @@ $topProducts = $pdo->query('SELECT * FROM products ORDER BY created_at DESC LIMI
   </section>
 
   <section class="top-companies fade-up"
-    style="background:linear-gradient(90deg,#f8fafc,#fffaf0,#f8fafc);padding:40px;border-radius:20px;border:1px solid #e0e4e8">
+    style="background:linear-gradient(90deg,#f8fafc,#fffaf0,#f8fafc);padding:10px;border-radius:20px;border:1px solid #e0e4e8">
     <h2 style="display:flex;align-items:center;gap:12px;margin-bottom:28px"><span style="font-size:24px">◆</span> Top
       entreprises partenaires</h2>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px">
@@ -185,7 +185,7 @@ $topProducts = $pdo->query('SELECT * FROM products ORDER BY created_at DESC LIMI
   </section>
 
   <section class="testimonials fade-up"
-    style="background:linear-gradient(135deg,#f8f8ff,#fff8f8);padding:48px 40px;border-radius:20px;border:1px solid #e0e4e8">
+    style="background:linear-gradient(135deg,#f8f8ff,#fff8f8);padding:10px;border-radius:20px;border:1px solid #e0e4e8">
     <h2 style="display:flex;align-items:center;gap:12px;margin-bottom:32px"><span style="font-size:24px">◆</span> Ce que
       disent nos utilisateurs</h2>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:24px">
@@ -239,7 +239,10 @@ $topProducts = $pdo->query('SELECT * FROM products ORDER BY created_at DESC LIMI
 
   <section class="faq fade-up">
     <h2 style="display:flex;align-items:center;gap:12px"><span style="font-size:24px">◇</span> Questions fréquentes</h2>
-    <div style="margin-top:28px;display:grid;grid-template-columns:repeat(auto-fit,minmax(480px,1fr));gap:16px">
+    <div class="faq-grid" style="margin-top:28px;display:grid;
+            grid-template-columns:repeat(auto-fit,minmax(min(100%,480px),1fr));
+            gap:16px">
+
       <div
         style="background:white;padding:20px;border-radius:12px;border:1px solid #e0e4e8;box-shadow:0 2px 8px rgba(0,0,0,0.04)">
         <strong style="color:#0066cc;display:block;margin-bottom:8px;font-size:14px">◆ Combien je peux gagner par mois
@@ -283,7 +286,7 @@ $topProducts = $pdo->query('SELECT * FROM products ORDER BY created_at DESC LIMI
   </section>
 
   <section
-    style="background:linear-gradient(135deg,#f0f5ff,#fff5f5);padding:48px 40px;border-radius:20px;margin-bottom:48px;border:1px solid #e0e4e8">
+    style="background:linear-gradient(135deg,#f0f5ff,#fff5f5);padding:10px;border-radius:20px;margin-bottom:48px;border:1px solid #e0e4e8">
     <h2 style="display:flex;align-items:center;gap:12px;margin-bottom:28px"><span style="font-size:24px">▪</span>
       Avantages TrustPick</h2>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px">

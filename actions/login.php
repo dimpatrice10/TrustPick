@@ -8,7 +8,7 @@ $pass = $_POST['password'] ?? '';
 
 if (!$email || !$pass) {
     $_SESSION['error'] = 'Veuillez remplir tous les champs.';
-    redirect('index.php?page=login');
+    header('Location: ../public/index.php?page=login');
 }
 
 $stmt = $pdo->prepare('SELECT * FROM users WHERE email = ?');
@@ -16,7 +16,7 @@ $stmt->execute([$email]);
 $user = $stmt->fetch();
 if (!$user) {
     $_SESSION['error'] = 'Utilisateur non trouvé.';
-    redirect('index.php?page=login');
+    header('Location: ../public/index.php?page=login');
 }
 
 // support legacy plaintext or hashed passwords
@@ -30,10 +30,10 @@ if (strpos($stored, '$2y$') === 0 || strpos($stored, '$2a$') === 0) {
 
 if (!$ok) {
     $_SESSION['error'] = 'Mot de passe incorrect.';
-    redirect('index.php?page=login');
+    header('Location: ../public/index.php?page=login');
 }
 
 // success
 $_SESSION['user_id'] = $user['id'];
 $_SESSION['user_name'] = $user['name'];
-redirect('index.php?page=home');
+header('Location: ../public/index.php?page=home');

@@ -63,7 +63,7 @@ $withList = $withListStmt->fetchAll();
     </div>
   </div>
 
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:32px">
+  <div class="wallet-history-grid" style="display:grid;gap:24px;margin-bottom:32px">
     <section
       style="background:white;padding:24px;border-radius:12px;border:1px solid #e0e4e8;box-shadow:0 4px 12px rgba(0,0,0,0.08)">
       <h2 style="margin-top:0">Historique des gains (par avis)</h2>

@@ -1,44 +1,57 @@
 <?php
 /**
- * URL Helper — Génère des URLs absolues correctes
+ * URL Helper — Fonctionne en local et en production
  */
 
-// Détection automatique de BASE_URL selon l'environnement
-$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-$protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
+// Détection du protocole
+$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
 
-// Logique pour définir BASE_URL selon l'environnement
-if ($host === 'localhost') {
-    // En local : index.php dans public/, assets dans public/assets/
-    define('BASE_URL', $protocol . '://' . $host . '/trustpick/public/');
+// Host (localhost, domaine, sous-domaine…)
+$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+
+// Script en cours (/trustpick/public/index.php ou /index.php)
+$scriptName = $_SERVER['SCRIPT_NAME'] ?? '/';
+
+// Dossier du script
+$scriptDir = rtrim(str_replace('\\', '/', dirname($scriptName)), '/');
+
+// Si l'app est dans un dossier "public", on remonte d'un niveau
+if (basename($scriptDir) === 'public') {
+    $basePath = dirname($scriptDir);
 } else {
-    // En production : index.php à la racine, assets dans /assets/
-    define('BASE_URL', $protocol . '://' . $host . '/');
+    $basePath = $scriptDir;
 }
 
-define('BASE_PATH', __DIR__ . '/..');
+// Normalisation
+$basePath = ($basePath === '/' || $basePath === '.') ? '' : $basePath;
+
+// BASE_URL finale (TOUJOURS ABSOLUE)
+define('BASE_URL', $protocol . '://' . $host . $basePath . '/');
+
+// Chemin disque du projet
+define('BASE_PATH', realpath(__DIR__ . '/..'));
 
 /**
- * Génère une URL absolue basée sur `BASE_URL`
+ * Génère une URL absolue correcte
  */
-function url($path = '')
+function url(string $path = ''): string
 {
     return rtrim(BASE_URL, '/') . '/' . ltrim($path, '/');
 }
 
 /**
- * Redirige vers une URL
+ * Redirection HTTP
  */
-function redirect($path)
+function redirect(string $path): void
 {
     header('Location: ' . url($path));
     exit;
 }
 
 /**
- * Chemin absolu du projet
+ * Chemin absolu côté serveur
  */
-function base_path($path = '')
+function base_path(string $path = ''): string
 {
-    return BASE_PATH . ($path ? '/' . ltrim($path, '/') : '');
+    return BASE_PATH . ($path ? DIRECTORY_SEPARATOR . ltrim($path, '/') : '');
 }

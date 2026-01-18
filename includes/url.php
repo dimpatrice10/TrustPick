@@ -3,22 +3,19 @@
  * URL Helper — Génère des URLs absolues correctes
  */
 
-// Détecter automatiquement le base url d'après l'emplacement du script
-// Permet de déployer l'application soit à la racine, soit dans un sous-dossier
-$scriptName = $_SERVER['SCRIPT_NAME'] ?? '/';
-$scriptDir = rtrim(str_replace('\\', '/', dirname($scriptName)), '/');
+// Détection automatique de BASE_URL selon l'environnement
+$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+$protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
 
-// If the front controller lives in a `public` folder, assume the app
-// base is the parent directory (so assets at /TrustPick/assets/...)
-if ($scriptDir !== '' && basename($scriptDir) === 'public') {
-    $appBase = dirname($scriptDir);
+// Logique pour définir BASE_URL selon l'environnement
+if ($host === 'localhost') {
+    // En local : index.php dans public/, assets dans public/assets/
+    define('BASE_URL', $protocol . '://' . $host . '/trustpick/public/');
 } else {
-    $appBase = $scriptDir;
+    // En production : index.php à la racine, assets dans /assets/
+    define('BASE_URL', $protocol . '://' . $host . '/');
 }
 
-$baseDir = $appBase === '' ? '/' : rtrim($appBase, '/') . '/';
-
-define('BASE_URL', $baseDir);
 define('BASE_PATH', __DIR__ . '/..');
 
 /**

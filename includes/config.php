@@ -1,5 +1,5 @@
 <?php
-// DB config for local XAMPP
+// Configuration de la base de données pour TrustPick
 return [
     'db_host' => '127.0.0.1',
     'db_name' => 'trustpick',

@@ -4,13 +4,13 @@ require __DIR__ . '/../includes/url.php';
 require __DIR__ . '/../includes/db.php';
 if (empty($_SESSION['user_id'])) {
     $_SESSION['error'] = 'Connectez-vous.';
-    redirect('index.php?page=login');
+    header('../public/index.php?page=login');
 }
 
 $amount = floatval($_POST['amount'] ?? 0);
 if ($amount <= 0) {
     $_SESSION['error'] = 'Montant invalide.';
-    redirect('index.php?page=wallet');
+    header('../public/index.php?page=wallet');
 }
 
 // check balance
@@ -19,7 +19,7 @@ $stmt->execute([$_SESSION['user_id']]);
 $w = $stmt->fetch();
 if (!$w || $w['balance'] < $amount) {
     $_SESSION['error'] = 'Solde insuffisant.';
-    redirect('index.php?page=wallet');
+    header('../public/index.php?page=wallet');
 }
 
 // create withdrawal (pending) and debit wallet
@@ -29,4 +29,4 @@ $pdo->prepare('UPDATE wallets SET balance = balance - ? WHERE user_id = ?')->exe
 $pdo->commit();
 
 $_SESSION['success'] = 'Demande de retrait créée. Traitement en cours.';
-redirect('index.php?page=wallet');
+header('../public/index.php?page=wallet');

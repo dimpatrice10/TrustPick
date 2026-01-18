@@ -9,7 +9,7 @@ $pass = $_POST['password'] ?? '';
 
 if (!$name || !$email || !$pass) {
     $_SESSION['error'] = 'Veuillez remplir tous les champs.';
-    redirect('index.php?page=register');
+    header('../public/index.php?page=register');
 }
 
 // basic check
@@ -17,7 +17,7 @@ $stmt = $pdo->prepare('SELECT id FROM users WHERE email = ?');
 $stmt->execute([$email]);
 if ($stmt->fetch()) {
     $_SESSION['error'] = 'Email déjà utilisé.';
-    redirect('index.php?page=register');
+    header('../public/index.php?page=register');
 }
 
 // NOTE: passwords stored in plaintext in seed for local dev; but here we hash
@@ -32,4 +32,4 @@ $pdo->prepare('INSERT INTO wallets (user_id,balance) VALUES (?,?)')->execute([$u
 // login
 $_SESSION['user_id'] = $uid;
 $_SESSION['user_name'] = $name;
-redirect('index.php?page=home');
+header('../public/index.php?page=home');

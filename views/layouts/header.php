@@ -102,7 +102,7 @@ require_once __DIR__ . '/../../includes/db.php';
               <strong><?= htmlspecialchars($me['name'] ?? 'Utilisateur') ?></strong>
             </div> -->
             <!-- Mon compte -->
-            <a class="nav-link nav-icon" href="<?= url('index.php?page=user_dashboard') ?>" title="Mon compte"
+            <a class="nav-link nav-icon" style="margin: 0px 10px;" href="<?= url('index.php?page=user_dashboard') ?>" title="Mon compte"
               aria-label="Mon compte">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
@@ -112,7 +112,7 @@ require_once __DIR__ . '/../../includes/db.php';
             </a>
 
             <!-- Portefeuille -->
-            <a class="nav-link nav-icon" href="<?= url('index.php?page=wallet') ?>" title="Portefeuille"
+            <a class="nav-link nav-icon" style="margin: 0px 10px;" href="<?= url('index.php?page=wallet') ?>" title="Portefeuille"
               aria-label="Portefeuille">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
@@ -122,7 +122,7 @@ require_once __DIR__ . '/../../includes/db.php';
             </a>
 
             <!-- Déconnexion -->
-            <a class="nav-link nav-icon" href="<?= url('actions/logout.php') ?>" title="Déconnexion"
+            <a class="nav-link nav-icon" style="margin: 0px 10px;" href="<?= url('actions/logout.php') ?>" title="Déconnexion"
               aria-label="Déconnexion">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">

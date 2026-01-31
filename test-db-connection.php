@@ -34,7 +34,7 @@ try {
 
 // Test 3: Table counts
 echo "\n3. Checking tables...\n";
-$tables = ['users', 'companies', 'products', 'reviews', 'wallets', 'withdrawals'];
+$tables = ['users', 'companies', 'products', 'reviews', 'transactions', 'withdrawals'];
 foreach ($tables as $t) {
     try {
         $cnt = $pdo->query("SELECT COUNT(*) FROM $t")->fetchColumn();

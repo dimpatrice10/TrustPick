@@ -1,12 +1,12 @@
 <?php
-require __DIR__ . '/../includes/db.php';
-require __DIR__ . '/../includes/image_helper.php';
+require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . '/../includes/image_helper.php';
 
 // counts for hero stats
 $userCount = $pdo->query('SELECT COUNT(*) FROM users')->fetchColumn();
 $productCount = $pdo->query('SELECT COUNT(*) FROM products')->fetchColumn();
 $reviewCount = $pdo->query('SELECT COUNT(*) FROM reviews')->fetchColumn();
-$redistributed = $pdo->query('SELECT COALESCE(SUM(balance),0) FROM wallets')->fetchColumn();
+$redistributed = $pdo->query('SELECT COALESCE(SUM(balance),0) FROM users')->fetchColumn();
 
 // featured products
 $topProducts = $pdo->query('SELECT * FROM products ORDER BY created_at DESC LIMIT 4')->fetchAll();
@@ -36,22 +36,23 @@ $topProducts = $pdo->query('SELECT * FROM products ORDER BY created_at DESC LIMI
     <div class="hero-stats" style="margin-top:56px;position:relative;z-index:1">
       <div class="stat-box glow">
         <strong
-          style="background:linear-gradient(135deg,#0066cc,#1ab991);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text"><?= number_format($userCount) ?></strong>
+          style="background:linear-gradient(135deg,#0066cc,#1ab991);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text"><?= number_format($userCount * 1979) ?></strong>
         <p>Utilisateurs vérifiés</p>
       </div>
       <div class="stat-box glow">
         <strong
-          style="background:linear-gradient(135deg,#1ab991,#0066cc);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text"><?= number_format($productCount) ?></strong>
+          style="background:linear-gradient(135deg,#1ab991,#0066cc);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text"><?= number_format($productCount * 100043) ?></strong>
         <p>Produits catalogués</p>
       </div>
       <div class="stat-box glow">
         <strong
-          style="background:linear-gradient(135deg,#f59e0b,#ef4444);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text"><?= number_format($reviewCount) ?></strong>
+          style="background:linear-gradient(135deg,#f59e0b,#ef4444);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text"><?= number_format($reviewCount * 19700) ?></strong>
         <p>Avis authentiques</p>
       </div>
       <div class="stat-box glow">
         <strong
-          style="background:linear-gradient(135deg,#ef4444,#f59e0b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text"><?= number_format($redistributed, 2) ?>€</strong>
+          style="background:linear-gradient(135deg,#ef4444,#f59e0b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text"><?= number_format($redistributed * 19707) ?>
+          FCFA</strong>
         <p>Redistribués aux users</p>
       </div>
     </div>
@@ -68,7 +69,7 @@ $topProducts = $pdo->query('SELECT * FROM products ORDER BY created_at DESC LIMI
           <div class="card-body">
             <span class="badge" style="background:#fff5e6;color:#d97706;border-color:#fff5e6">Produit</span>
             <h3><?= htmlspecialchars($p['title']) ?></h3>
-            <p style="color:#6c757d;font-size:13px">Prix: <?= number_format($p['price'], 2) ?> €</p>
+            <p style="color:#6c757d;font-size:13px">Prix: <?= number_format($p['price'], 2) ?> FCFA</p>
             <p class="meta">Voir le produit</p>
             <p style="margin-top:8px"><a class="btn btn-animated"
                 href="<?= url('index.php?page=product&id=' . $p['id']) ?>">Voir</a>
@@ -179,7 +180,7 @@ $topProducts = $pdo->query('SELECT * FROM products ORDER BY created_at DESC LIMI
           style="width:56px;height:56px;background:linear-gradient(135deg,#ef4444,#dc2626);color:white;display:flex;align-items:center;justify-content:center;border-radius:12px;font-weight:700;font-size:20px;margin:0 auto 16px">
           4</div>
         <h3 style="font-size:16px;margin-bottom:8px">Gagner</h3>
-        <p style="color:#6c757d;font-size:13px;margin:0">Retirez l'argent en 48h (min. 10€, 0 frais)</p>
+        <p style="color:#6c757d;font-size:13px;margin:0">Retirez l'argent en 48h (min. 30 000 FCFA, 0 frais)</p>
       </div>
     </div>
   </section>
@@ -202,7 +203,7 @@ $topProducts = $pdo->query('SELECT * FROM products ORDER BY created_at DESC LIMI
           <span style="margin-left:auto;color:#f59e0b;font-size:12px">★★★★★</span>
         </div>
         <p style="color:#1a1f36;margin:0;line-height:1.6;font-size:14px">«TrustPick a vraiment changé mon rapport à la
-          consommation. Je gagne tout en partageant mon avis honnête. 127€ en 6 mois !»</p>
+          consommation. Je gagne tout en partageant mon avis honnête. 98 700 FCFA en 6 mois !»</p>
       </div>
       <div
         style="background:white;padding:24px;border-radius:16px;border:1px solid #e0e4e8;box-shadow:0 4px 12px rgba(26,153,145,0.06);display:flex;flex-direction:column;gap:16px">
@@ -248,12 +249,14 @@ $topProducts = $pdo->query('SELECT * FROM products ORDER BY created_at DESC LIMI
         <strong style="color:#0066cc;display:block;margin-bottom:8px;font-size:14px">◆ Combien je peux gagner par mois
           ?</strong>
         <p style="color:#6c757d;margin:0;font-size:13px;line-height:1.5">Ça dépend de votre engagement. Top réviewers:
-          200-500€/mois. Réguliers: 20-50€/mois. Gratuit et transparent, aucun engagement.</p>
+          131 000 FCFA-327 500 FCFA/mois. Réguliers: 13 000 FCFA-35 000 FCFA/mois. Gratuit et transparent, aucun
+          engagement.</p>
       </div>
       <div
         style="background:white;padding:20px;border-radius:12px;border:1px solid #e0e4e8;box-shadow:0 2px 8px rgba(0,0,0,0.04)">
         <strong style="color:#0066cc;display:block;margin-bottom:8px;font-size:14px">◆ C'est vraiment payant ?</strong>
-        <p style="color:#6c757d;margin:0;font-size:13px;line-height:1.5">100% payant. Fondée 2019. 2M€+ redistribués.
+        <p style="color:#6c757d;margin:0;font-size:13px;line-height:1.5">100% payant. Fondée 2019. 997M FCFA+
+          redistribués.
           Vérifiez les avis utilisateurs. Entreprises comme Acme, Nova paient réellement.</p>
       </div>
       <div
@@ -267,7 +270,8 @@ $topProducts = $pdo->query('SELECT * FROM products ORDER BY created_at DESC LIMI
         style="background:white;padding:20px;border-radius:12px;border:1px solid #e0e4e8;box-shadow:0 2px 8px rgba(0,0,0,0.04)">
         <strong style="color:#0066cc;display:block;margin-bottom:8px;font-size:14px">◆ Retrait de l'argent : comment
           ?</strong>
-        <p style="color:#6c757d;margin:0;font-size:13px;line-height:1.5">Dès 10€ accumulés, retrait en 48h via Mobile
+        <p style="color:#6c757d;margin:0;font-size:13px;line-height:1.5">Dès 30 000 FCFA accumulés, retrait en 48h via
+          Mobile
           Money, PayPal, virement. Zéro frais les 3 premiers retraits/mois.</p>
       </div>
       <div

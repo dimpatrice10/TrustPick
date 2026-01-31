@@ -1,6 +1,8 @@
 <?php
-require __DIR__ . '/../includes/db.php';
-require __DIR__ . '/../includes/image_helper.php';
+require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . '/../includes/image_helper.php';
+require_once __DIR__ . '/../includes/url.php';
+require_once __DIR__ . '/../includes/helpers.php';
 
 if (session_status() === PHP_SESSION_NONE) {
   session_start();
@@ -41,7 +43,7 @@ $reviews = $reviews->fetchAll();
     <div class="product-info">
       <h1><?= htmlspecialchars($product['title']) ?></h1>
       <p class="rating">★ <?= htmlspecialchars($avg_rating) ?> /5 (<?= intval($review_count) ?> avis)</p>
-      <p class="price">Prix indicatif: <?= number_format($product['price'] ?? 0, 2) ?> €</p>
+      <p class="price">Prix indicatif: <?= formatFCFA($product['price'] ?? 0) ?></p>
       <p style="color:#6c757d;margin:12px 0 20px">Marque:
         <strong><?= htmlspecialchars($product['brand'] ?? $product['company_name'] ?? '—') ?></strong> · Catégorie:
         <?= htmlspecialchars($product['category'] ?? '—') ?>
@@ -50,6 +52,12 @@ $reviews = $reviews->fetchAll();
         <p><a class="btn btn-animated ripple" href="<?= url('index.php?page=login') ?>">Se connecter pour noter</a></p>
       <?php else: ?>
         <p><a class="btn btn-animated ripple" href="#leave-review">Laisser un avis</a></p>
+        <p style="margin-top:12px">
+          <button class="btn btn-outline" onclick="document.getElementById('recommend-modal').style.display='block'"
+            style="background:white;border:2px solid #0066cc;color:#0066cc;padding:10px 20px;border-radius:8px;cursor:pointer">
+            <i class="bi bi-megaphone me-1"></i>Recommander ce produit (+<?= formatFCFA(200) ?>)
+          </button>
+        </p>
       <?php endif; ?>
       <div class="glow"
         style="background:linear-gradient(135deg,#e6f9f2,#fff);padding:12px;border-radius:8px;margin-top:16px;font-size:13px;border-left:4px solid #1ab991">
@@ -126,7 +134,7 @@ $reviews = $reviews->fetchAll();
           <div class="card-body">
             <span class="badge">Alternatif</span>
             <h3><?= htmlspecialchars($s['title']) ?></h3>
-            <p style="color:#6c757d;font-size:13px">Prix: <?= number_format($s['price'], 2) ?> €</p>
+            <p style="color:#6c757d;font-size:13px">Prix: <?= formatFCFA($s['price']) ?></p>
             <p class="rating">★ <?= htmlspecialchars($s['rating'] ?? '—') ?></p>
           </div>
         </article>
@@ -152,7 +160,7 @@ $reviews = $reviews->fetchAll();
             →</a></p>
       </div>
       <div>
-        <p style="font-size:13px;margin:0 0 12px"><strong>▶ Livraison gratuite</strong> dès 50€</p>
+        <p style="font-size:13px;margin:0 0 12px"><strong>▶ Livraison gratuite</strong> dès 25 000 FCFA</p>
         <p style="font-size:13px;margin:0 0 12px"><strong>▶ Retours gratuits</strong> 30 jours</p>
         <p style="font-size:13px;margin:0 0 12px"><strong>▶ Garantie</strong> 2 ans constructeur</p>
         <p style="font-size:13px;margin:0"><strong>▶ Support</strong> Chat/Email 24h/24</p>
@@ -199,9 +207,43 @@ $reviews = $reviews->fetchAll();
             style="width:100%;padding:10px;border-radius:8px;border:1px solid #e6eef8"></textarea>
         </div>
         <div style="text-align:right">
-          <button class="btn btn-animated" type="submit">Publier l'avis</button>
+          <button class="btn btn-animated" type="submit">Publier l'avis (+<?= formatFCFA(500) ?>)</button>
         </div>
       </form>
     </section>
   <?php endif; ?>
+
+  <!-- Modal Recommandation -->
+  <div id="recommend-modal"
+    style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:10000;align-items:center;justify-content:center"
+    onclick="if(event.target.id==='recommend-modal') this.style.display='none'">
+    <div
+      style="background:white;padding:32px;border-radius:12px;max-width:500px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,0.2)"
+      onclick="event.stopPropagation()">
+      <h2 style="margin-top:0"><i class="bi bi-megaphone me-2"></i>Recommander ce produit</h2>
+      <p style="color:#6c757d;margin-bottom:20px">Partagez ce produit avec un ami et gagnez
+        <strong><?= formatFCFA(200) ?></strong> immédiatement !
+      </p>
+      <form action="<?= url('actions/recommend.php') ?>" method="POST">
+        <input type="hidden" name="product_id" value="<?= intval($product['id']) ?>">
+        <div style="margin-bottom:16px">
+          <label style="display:block;margin-bottom:8px;font-weight:600">À qui recommandez-vous ce produit ?</label>
+          <input type="text" name="contact_info" placeholder="Nom, email ou téléphone"
+            style="width:100%;padding:12px;border:1px solid #e6eef8;border-radius:8px" required>
+          <small style="color:#6c757d;display:block;margin-top:4px">Ex: Jean Dupont, jean@email.com, +237 690 123
+            456</small>
+        </div>
+        <div style="display:flex;gap:12px;justify-content:flex-end">
+          <button type="button" onclick="document.getElementById('recommend-modal').style.display='none'"
+            style="padding:10px 20px;border:1px solid #e0e4e8;background:white;border-radius:8px;cursor:pointer">
+            Annuler
+          </button>
+          <button type="submit" class="btn btn-animated ripple">
+            Envoyer (+<?= formatFCFA(200) ?>)
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
 </main>

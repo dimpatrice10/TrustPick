@@ -11,6 +11,8 @@
     </nav>
   </div>
 </footer>
+<!-- Bootstrap 5 JS Bundle (inclut Popper) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="<?= url('assets/js/app.js') ?>"></script>
 <script src="<?= url('assets/js/ui-enhancements.js') ?>"></script>
 </body>

@@ -1,0 +1,770 @@
+/* ============================================================
+   TRUSTPICK V2 - STYLES PRINCIPAUX
+   Adapté au marché africain - Monnaie FCFA
+   ============================================================ */
+
+:root {
+  /* Couleurs principales */
+  --tp-primary: #2563eb;
+  --tp-secondary: #0ea5e9;
+  --tp-success: #10b981;
+  --tp-warning: #f59e0b;
+  --tp-danger: #ef4444;
+  --tp-dark: #1e293b;
+  --tp-light: #f8fafc;
+
+  /* Couleurs FCFA */
+  --tp-fcfa-green: #059669;
+  --tp-fcfa-gold: #d97706;
+
+  /* Espacements */
+  --tp-radius: 12px;
+  --tp-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --tp-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+/* ============================================================
+   GLOBAL
+   ============================================================ */
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: var(--tp-light);
+  color: var(--tp-dark);
+  line-height: 1.6;
+}
+
+.container-fluid {
+  padding: 0 15px;
+}
+
+/* ============================================================
+   HEADER & NAVIGATION
+   ============================================================ */
+
+.trustpick-header {
+  background: linear-gradient(135deg, var(--tp-primary), var(--tp-secondary));
+  color: white;
+  padding: 1rem 0;
+  box-shadow: var(--tp-shadow);
+}
+
+.trustpick-logo {
+  font-size: 1.5rem;
+  font-weight: bold;
+  text-decoration: none;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.trustpick-logo:hover {
+  color: white;
+  opacity: 0.9;
+}
+
+.trustpick-nav {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.trustpick-nav a {
+  color: white;
+  text-decoration: none;
+  font-weight: 500;
+  transition: opacity 0.3s;
+}
+
+.trustpick-nav a:hover {
+  opacity: 0.8;
+}
+
+.notification-badge {
+  position: absolute;
+  top: -5px;
+  right: -8px;
+  background: var(--tp-danger);
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  font-size: 0.7rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+/* ============================================================
+   SIDEBAR
+   ============================================================ */
+
+.trustpick-sidebar {
+  background: white;
+  min-height: calc(100vh - 80px);
+  padding: 1.5rem 0;
+  box-shadow: var(--tp-shadow);
+}
+
+.sidebar-menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar-menu li {
+  margin-bottom: 0.5rem;
+}
+
+.sidebar-menu a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0.8rem 1.5rem;
+  color: var(--tp-dark);
+  text-decoration: none;
+  transition: all 0.3s;
+  border-left: 3px solid transparent;
+}
+
+.sidebar-menu a:hover {
+  background-color: var(--tp-light);
+  border-left-color: var(--tp-primary);
+}
+
+.sidebar-menu a.active {
+  background-color: rgba(37, 99, 235, 0.1);
+  border-left-color: var(--tp-primary);
+  color: var(--tp-primary);
+  font-weight: 600;
+}
+
+.sidebar-icon {
+  font-size: 1.3rem;
+  width: 24px;
+  text-align: center;
+}
+
+/* ============================================================
+   CARDS
+   ============================================================ */
+
+.tp-card {
+  background: white;
+  border-radius: var(--tp-radius);
+  box-shadow: var(--tp-shadow);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  transition:
+    transform 0.3s,
+    box-shadow 0.3s;
+}
+
+.tp-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--tp-shadow-lg);
+}
+
+.tp-card-header {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: var(--tp-dark);
+}
+
+/* ============================================================
+   PRODUCT CARD
+   ============================================================ */
+
+.product-card {
+  background: white;
+  border-radius: var(--tp-radius);
+  overflow: hidden;
+  box-shadow: var(--tp-shadow);
+  transition: all 0.3s;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--tp-shadow-lg);
+}
+
+.product-image {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  background-color: #e5e7eb;
+}
+
+.product-info {
+  padding: 1rem;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.product-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: var(--tp-dark);
+}
+
+.product-company {
+  font-size: 0.9rem;
+  color: #6b7280;
+  margin-bottom: 0.5rem;
+}
+
+.product-rating {
+  font-size: 0.9rem;
+  margin-bottom: 0.8rem;
+  color: var(--tp-warning);
+}
+
+.product-rating span {
+  color: #6b7280;
+  margin-left: 5px;
+}
+
+.product-price {
+  font-size: 1.3rem;
+  font-weight: bold;
+  color: var(--tp-fcfa-green);
+  margin-bottom: 1rem;
+  margin-top: auto;
+}
+
+/* ============================================================
+   TASK CARD
+   ============================================================ */
+
+.task-card {
+  background: white;
+  border-radius: var(--tp-radius);
+  padding: 1.2rem;
+  margin-bottom: 1rem;
+  box-shadow: var(--tp-shadow);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: all 0.3s;
+}
+
+.task-card:hover {
+  box-shadow: var(--tp-shadow-lg);
+}
+
+.task-card.completed {
+  opacity: 0.6;
+  background-color: #f3f4f6;
+}
+
+.task-icon {
+  font-size: 2.5rem;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--tp-primary), var(--tp-secondary));
+  border-radius: 50%;
+}
+
+.task-info {
+  flex-grow: 1;
+}
+
+.task-info h5 {
+  margin: 0 0 0.3rem 0;
+  font-size: 1.1rem;
+  color: var(--tp-dark);
+}
+
+.task-info p {
+  margin: 0 0 0.5rem 0;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.task-reward {
+  background: var(--tp-fcfa-green);
+  color: white;
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.task-complete-btn {
+  white-space: nowrap;
+}
+
+.task-card.completed .task-complete-btn {
+  background-color: #9ca3af;
+  border-color: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* ============================================================
+   NOTIFICATION CARD
+   ============================================================ */
+
+.notification-card {
+  background: white;
+  border-radius: var(--tp-radius);
+  padding: 1rem;
+  margin-bottom: 0.8rem;
+  box-shadow: var(--tp-shadow);
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  cursor: pointer;
+  transition: all 0.3s;
+  border-left: 4px solid transparent;
+}
+
+.notification-card:hover {
+  background-color: #f9fafb;
+}
+
+.notification-card.unread {
+  background-color: rgba(37, 99, 235, 0.05);
+  border-left-color: var(--tp-primary);
+}
+
+.notif-icon {
+  font-size: 1.8rem;
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--tp-light);
+  border-radius: 50%;
+}
+
+.notif-content {
+  flex-grow: 1;
+}
+
+.notif-content h6 {
+  margin: 0 0 0.3rem 0;
+  font-size: 1rem;
+  color: var(--tp-dark);
+}
+
+.notif-content p {
+  margin: 0 0 0.3rem 0;
+  color: #4b5563;
+  font-size: 0.9rem;
+}
+
+.notif-content small {
+  color: #9ca3af;
+  font-size: 0.8rem;
+}
+
+/* ============================================================
+   WALLET / FCFA
+   ============================================================ */
+
+.wallet-balance {
+  background: linear-gradient(135deg, var(--tp-fcfa-green), #10b981);
+  color: white;
+  border-radius: var(--tp-radius);
+  padding: 2rem;
+  text-align: center;
+  box-shadow: var(--tp-shadow-lg);
+  margin-bottom: 2rem;
+}
+
+.wallet-balance h2 {
+  margin: 0;
+  font-size: 3rem;
+  font-weight: bold;
+}
+
+.wallet-balance p {
+  margin: 0.5rem 0 0 0;
+  opacity: 0.9;
+  font-size: 1.1rem;
+}
+
+.fcfa-amount {
+  color: var(--tp-fcfa-green);
+  font-weight: 700;
+}
+
+.transaction-item {
+  background: white;
+  border-radius: var(--tp-radius);
+  padding: 1rem;
+  margin-bottom: 0.8rem;
+  box-shadow: var(--tp-shadow);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.transaction-info h6 {
+  margin: 0 0 0.3rem 0;
+  font-size: 1rem;
+}
+
+.transaction-info small {
+  color: #6b7280;
+}
+
+.transaction-amount {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.transaction-amount.positive {
+  color: var(--tp-success);
+}
+
+.transaction-amount.negative {
+  color: var(--tp-danger);
+}
+
+/* ============================================================
+   REVIEW CARD
+   ============================================================ */
+
+.review-card {
+  background: white;
+  border-radius: var(--tp-radius);
+  padding: 1.2rem;
+  margin-bottom: 1rem;
+  box-shadow: var(--tp-shadow);
+}
+
+.review-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.8rem;
+}
+
+.review-author {
+  font-weight: 600;
+  color: var(--tp-dark);
+}
+
+.review-rating {
+  color: var(--tp-warning);
+}
+
+.review-date {
+  color: #9ca3af;
+  font-size: 0.85rem;
+}
+
+.review-title {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: var(--tp-dark);
+}
+
+.review-body {
+  color: #4b5563;
+  margin-bottom: 1rem;
+  line-height: 1.6;
+}
+
+.review-actions {
+  display: flex;
+  gap: 1rem;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 0.8rem;
+}
+
+.review-action-btn {
+  background: none;
+  border: none;
+  color: #6b7280;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.9rem;
+  transition: color 0.3s;
+}
+
+.review-action-btn:hover {
+  color: var(--tp-primary);
+}
+
+.review-action-btn.liked {
+  color: var(--tp-primary);
+}
+
+.review-action-btn.disliked {
+  color: var(--tp-danger);
+}
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+
+.btn-tp-primary {
+  background: linear-gradient(135deg, var(--tp-primary), var(--tp-secondary));
+  border: none;
+  color: white;
+  padding: 0.6rem 1.5rem;
+  border-radius: var(--tp-radius);
+  font-weight: 600;
+  transition: all 0.3s;
+  cursor: pointer;
+}
+
+.btn-tp-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--tp-shadow);
+  color: white;
+}
+
+.btn-tp-success {
+  background: var(--tp-success);
+  border: none;
+  color: white;
+}
+
+.btn-tp-success:hover {
+  background: #059669;
+  color: white;
+}
+
+.btn-load-more {
+  width: 100%;
+  margin-top: 1rem;
+  padding: 0.8rem;
+  border: 2px dashed var(--tp-primary);
+  background: white;
+  color: var(--tp-primary);
+  border-radius: var(--tp-radius);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-load-more:hover {
+  background: rgba(37, 99, 235, 0.05);
+}
+
+/* ============================================================
+   STATS CARDS
+   ============================================================ */
+
+.stat-card {
+  background: white;
+  border-radius: var(--tp-radius);
+  padding: 1.5rem;
+  box-shadow: var(--tp-shadow);
+  text-align: center;
+  transition: all 0.3s;
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--tp-shadow-lg);
+}
+
+.stat-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.8rem;
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: bold;
+  color: var(--tp-dark);
+  margin-bottom: 0.3rem;
+}
+
+.stat-label {
+  color: #6b7280;
+  font-size: 0.95rem;
+}
+
+/* ============================================================
+   BADGES
+   ============================================================ */
+
+.badge-tp {
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.badge-active {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--tp-success);
+}
+
+.badge-inactive {
+  background: rgba(107, 114, 128, 0.1);
+  color: #6b7280;
+}
+
+.badge-pending {
+  background: rgba(245, 158, 11, 0.1);
+  color: var(--tp-warning);
+}
+
+/* ============================================================
+   REFERRAL
+   ============================================================ */
+
+.referral-link-box {
+  background: linear-gradient(135deg, var(--tp-primary), var(--tp-secondary));
+  color: white;
+  border-radius: var(--tp-radius);
+  padding: 1.5rem;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.referral-link {
+  background: white;
+  color: var(--tp-dark);
+  padding: 1rem;
+  border-radius: 8px;
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  margin: 1rem 0;
+  word-break: break-all;
+}
+
+.social-share-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+.social-btn {
+  padding: 0.6rem 1.2rem;
+  border-radius: var(--tp-radius);
+  color: white;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.social-btn:hover {
+  transform: translateY(-2px);
+  color: white;
+}
+
+.social-btn-whatsapp {
+  background: #25d366;
+}
+
+.social-btn-facebook {
+  background: #1877f2;
+}
+
+.social-btn-twitter {
+  background: #1da1f2;
+}
+
+/* ============================================================
+   PAGINATION
+   ============================================================ */
+
+.pagination-container {
+  margin-top: 2rem;
+  text-align: center;
+}
+
+.loading-spinner {
+  display: inline-block;
+  width: 30px;
+  height: 30px;
+  border: 3px solid #f3f4f6;
+  border-top-color: var(--tp-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 768px) {
+  .trustpick-sidebar {
+    display: none;
+  }
+
+  .sidebar-mobile-toggle {
+    display: block;
+  }
+
+  .product-card {
+    margin-bottom: 1rem;
+  }
+
+  .wallet-balance h2 {
+    font-size: 2rem;
+  }
+
+  .task-card {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .social-share-buttons {
+    flex-direction: column;
+  }
+}
+
+/* ============================================================
+   UTILITIES
+   ============================================================ */
+
+.text-fcfa {
+  color: var(--tp-fcfa-green);
+  font-weight: 600;
+}
+
+.mt-4 {
+  margin-top: 1.5rem;
+}
+.mb-4 {
+  margin-bottom: 1.5rem;
+}
+.text-center {
+  text-align: center;
+}
+.text-muted {
+  color: #6b7280;
+}
+
+.d-flex {
+  display: flex;
+}
+.justify-content-between {
+  justify-content: space-between;
+}
+.align-items-center {
+  align-items: center;
+}
+.gap-2 {
+  gap: 0.5rem;
+}

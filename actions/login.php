@@ -1,39 +1,62 @@
 <?php
-session_start();
+// Démarrage sécurisé de la session
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 require __DIR__ . '/../includes/url.php';
 require __DIR__ . '/../includes/db.php';
+require __DIR__ . '/../includes/helpers.php';
 
-$email = trim($_POST['email'] ?? '');
-$pass = $_POST['password'] ?? '';
+$cau = strtoupper(trim($_POST['cau'] ?? ''));
 
-if (!$email || !$pass) {
-    $_SESSION['error'] = 'Veuillez remplir tous les champs.';
-    header('Location: ../public/index.php?page=login');
+if (empty($cau)) {
+    addToast('error', 'Veuillez entrer votre Code d\'Accès Utilisateur (CAU).');
+    redirect(url('index.php?page=login'));
 }
 
-$stmt = $pdo->prepare('SELECT * FROM users WHERE email = ?');
-$stmt->execute([$email]);
+// Vérifier le CAU dans la base de données
+$stmt = $pdo->prepare('SELECT * FROM users WHERE cau = ? AND is_active = TRUE');
+$stmt->execute([$cau]);
 $user = $stmt->fetch();
+
 if (!$user) {
-    $_SESSION['error'] = 'Utilisateur non trouvé.';
-    header('Location: ../public/index.php?page=login');
+    addToast('error', 'CAU invalide ou compte inactif. Vérifiez votre code.');
+    redirect(url('index.php?page=login'));
 }
 
-// support legacy plaintext or hashed passwords
-$stored = $user['password'];
-$ok = false;
-if (strpos($stored, '$2y$') === 0 || strpos($stored, '$2a$') === 0) {
-    $ok = password_verify($pass, $stored);
-} else {
-    $ok = ($pass === $stored);
-}
-
-if (!$ok) {
-    $_SESSION['error'] = 'Mot de passe incorrect.';
-    header('Location: ../public/index.php?page=login');
-}
-
-// success
+// Connexion réussie - créer la session
 $_SESSION['user_id'] = $user['id'];
 $_SESSION['user_name'] = $user['name'];
-header('Location: ../public/index.php?page=home');
+$_SESSION['user_role'] = $user['role'];
+$_SESSION['cau'] = $user['cau'];
+$_SESSION['company_id'] = $user['company_id'] ?? null;
+$_SESSION['balance'] = $user['balance'] ?? 0;
+$_SESSION['referral_code'] = $user['referral_code'] ?? null;
+$_SESSION['login_time'] = time();
+$_SESSION['last_activity'] = time();
+
+// Mettre à jour last_login
+$pdo->prepare('UPDATE users SET last_login = NOW() WHERE id = ?')->execute([$user['id']]);
+
+// Enregistrer dans login_history
+$ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+$user_agent = $_SERVER['HTTP_USER_AGENT'] ?? 'unknown';
+$pdo->prepare('INSERT INTO login_history (user_id, ip_address, user_agent) VALUES (?, ?, ?)')
+    ->execute([$user['id'], $ip, $user_agent]);
+
+// Toast de bienvenue
+addToast('success', 'Bienvenue ' . $user['name'] . ' ! Connexion réussie.');
+
+// Redirection selon le rôle
+switch ($user['role']) {
+    case 'super_admin':
+        redirect(path: url('index.php?page=superadmin_dashboard'));
+        break;
+    case 'admin_entreprise':
+        redirect(url('index.php?page=admin_dashboard'));
+        break;
+    default:
+        redirect(url('index.php?page=home'));
+}
+

@@ -1,11 +1,12 @@
 <?php
 // Catalogue dynamique: filtres via GET, tri, pagination
 if (!isset($pdo)) {
-  require __DIR__ . '/../includes/db.php';
+  require_once __DIR__ . '/../includes/db.php';
 }
 
 // Charger la fonction helper pour les images
-require __DIR__ . '/../includes/image_helper.php';
+require_once __DIR__ . '/../includes/image_helper.php';
+require_once __DIR__ . '/../includes/helpers.php';
 
 $perPage = 12;
 $pageNum = max(1, intval($_GET['p'] ?? 1));
@@ -184,10 +185,12 @@ $products = $stmt->fetchAll();
         <select name="price"
           style="width:100%;padding:8px;border:1px solid #e0e4e8;border-radius:8px;color:#1a1f36;margin-bottom:12px">
           <option value="">Tous les prix</option>
-          <option value="lt50" <?= (($_GET['price'] ?? '') == 'lt50') ? 'selected' : '' ?>>Moins de 50€</option>
-          <option value="50-100" <?= (($_GET['price'] ?? '') == '50-100') ? 'selected' : '' ?>>50€ - 100€</option>
-          <option value="100-250" <?= (($_GET['price'] ?? '') == '100-250') ? 'selected' : '' ?>>100€ - 250€</option>
-          <option value="gt250" <?= (($_GET['price'] ?? '') == 'gt250') ? 'selected' : '' ?>>Plus de 250€</option>
+          <option value="lt50" <?= (($_GET['price'] ?? '') == 'lt50') ? 'selected' : '' ?>>Moins de 25 000 FCFA</option>
+          <option value="50-100" <?= (($_GET['price'] ?? '') == '50-100') ? 'selected' : '' ?>>25 000 - 50 000 FCFA
+          </option>
+          <option value="100-250" <?= (($_GET['price'] ?? '') == '100-250') ? 'selected' : '' ?>>50 000 - 125 000 FCFA
+          </option>
+          <option value="gt250" <?= (($_GET['price'] ?? '') == 'gt250') ? 'selected' : '' ?>>Plus de 125 000 FCFA</option>
         </select>
 
         <label
@@ -258,7 +261,7 @@ $products = $stmt->fetchAll();
               <p class="rating" style="margin-top:8px">★ <?= round(floatval($p['avg_rating']), 1) ?>/5
                 (<?= intval($p['review_count']) ?>)</p>
               <p class="meta"><?= intval($p['reco_count']) ?> recommandations •
-                <?= number_format($p['price'], 2, ',', ' ') ?> €
+                <?= formatFCFA($p['price']) ?>
               </p>
             </div>
           </article>

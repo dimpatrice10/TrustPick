@@ -1,7 +1,15 @@
 <?php
-session_start();
+// Démarrage sécurisé de la session
+if (session_status() === PHP_SESSION_NONE) {
+  session_start();
+}
+
 require_once __DIR__ . '/../../includes/url.php';
 require_once __DIR__ . '/../../includes/db.php';
+require_once __DIR__ . '/../../includes/helpers.php';
+
+// Récupérer les toasts pour affichage
+$toasts = getToasts();
 ?>
 <!doctype html>
 <html lang="fr">
@@ -14,7 +22,9 @@ require_once __DIR__ . '/../../includes/db.php';
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
     href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap"
-    rel="stylesheet">
+    rel="stylesheet"> <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
   <link rel="stylesheet" href="<?= url('assets/css/demo.css') ?>">
   <link rel="stylesheet" href="<?= url('assets/css/app.css') ?>">
   <link rel="stylesheet" href="<?= url('assets/css/ui-enhancements.css') ?>">
@@ -43,20 +53,16 @@ require_once __DIR__ . '/../../includes/db.php';
 
 <body>
   <?php if (!empty($_SESSION['error'])): ?>
-    <div
-      style="background:#fee2e2;color:#991b1b;padding:12px 16px;margin:0;border-bottom:1px solid #fecaca;display:flex;justify-content:space-between;align-items:center">
-      <span><?= htmlspecialchars($_SESSION['error']) ?></span>
-      <button onclick="this.parentElement.style.display='none'"
-        style="background:none;border:none;cursor:pointer;color:inherit;font-size:18px;padding:0">&times;</button>
+    <div class="alert alert-danger alert-dismissible fade show m-0 rounded-0" role="alert">
+      <i class="bi bi-exclamation-triangle-fill me-2"></i><?= htmlspecialchars($_SESSION['error']) ?>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
     </div>
     <?php unset($_SESSION['error']); ?>
   <?php endif; ?>
   <?php if (!empty($_SESSION['success'])): ?>
-    <div
-      style="background:#d1fae5;color:#065f46;padding:12px 16px;margin:0;border-bottom:1px solid #a7f3d0;display:flex;justify-content:space-between;align-items:center">
-      <span><?= htmlspecialchars($_SESSION['success']) ?></span>
-      <button onclick="this.parentElement.style.display='none'"
-        style="background:none;border:none;cursor:pointer;color:inherit;font-size:18px;padding:0">&times;</button>
+    <div class="alert alert-success alert-dismissible fade show m-0 rounded-0" role="alert">
+      <i class="bi bi-check-circle-fill me-2"></i><?= htmlspecialchars($_SESSION['success']) ?>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
     </div>
     <?php unset($_SESSION['success']); ?>
   <?php endif; ?>
@@ -68,7 +74,7 @@ require_once __DIR__ . '/../../includes/db.php';
         <!-- <span style="font-weight:800;font-family:Poppins;font-size:18px;background:linear-gradient(135deg,#0066cc,#1ab991);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">TrustPick</span> -->
         <?php if (!empty($_SESSION['user_id'])):
           try {
-            $uSt = $pdo->prepare('SELECT u.id,u.name, COALESCE(w.balance,0) AS balance FROM users u LEFT JOIN wallets w ON w.user_id = u.id WHERE u.id = ? LIMIT 1');
+            $uSt = $pdo->prepare('SELECT u.id,u.name, COALESCE(u.balance,0) AS balance FROM users u WHERE u.id = ? LIMIT 1');
             $uSt->execute([$_SESSION['user_id']]);
             $me = $uSt->fetch();
           } catch (Exception $e) {
@@ -76,7 +82,7 @@ require_once __DIR__ . '/../../includes/db.php';
           }
           ?>
           <div style="font-size:13px;color:#6c757d">Solde: <strong
-              style="color:#0066cc"><?= isset($me['balance']) ? number_format($me['balance'], 2, ',', ' ') . ' €' : '—' ?></strong>
+              style="color:#0066cc"><?= isset($me['balance']) ? number_format($me['balance'], 0, ',', ' ') . ' FCFA' : '—' ?></strong>
           </div>
         <?php endif; ?>
       </a>
@@ -90,7 +96,7 @@ require_once __DIR__ . '/../../includes/db.php';
         <a class="nav-link" href="<?= url('index.php?page=company') ?>">Entreprises</a>
         <?php if (!empty($_SESSION['user_id'])):
           try {
-            $uSt = $pdo->prepare('SELECT u.id,u.name, COALESCE(w.balance,0) AS balance FROM users u LEFT JOIN wallets w ON w.user_id = u.id WHERE u.id = ? LIMIT 1');
+            $uSt = $pdo->prepare('SELECT u.id,u.name, COALESCE(u.balance,0) AS balance FROM users u WHERE u.id = ? LIMIT 1');
             $uSt->execute([$_SESSION['user_id']]);
             $me = $uSt->fetch();
           } catch (Exception $e) {
@@ -102,8 +108,8 @@ require_once __DIR__ . '/../../includes/db.php';
               <strong><?= htmlspecialchars($me['name'] ?? 'Utilisateur') ?></strong>
             </div> -->
             <!-- Mon compte -->
-            <a class="nav-link nav-icon" style="margin: 0px 10px;" href="<?= url('index.php?page=user_dashboard') ?>" title="Mon compte"
-              aria-label="Mon compte">
+            <a class="nav-link nav-icon" style="margin: 0px 10px;" href="<?= url('index.php?page=user_dashboard') ?>"
+              title="Mon compte" aria-label="Mon compte">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
@@ -112,8 +118,8 @@ require_once __DIR__ . '/../../includes/db.php';
             </a>
 
             <!-- Portefeuille -->
-            <a class="nav-link nav-icon" style="margin: 0px 10px;" href="<?= url('index.php?page=wallet') ?>" title="Portefeuille"
-              aria-label="Portefeuille">
+            <a class="nav-link nav-icon" style="margin: 0px 10px;" href="<?= url('index.php?page=wallet') ?>"
+              title="Portefeuille" aria-label="Portefeuille">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
                 <rect x="2" y="6" width="20" height="12" rx="2" ry="2" />
@@ -122,8 +128,8 @@ require_once __DIR__ . '/../../includes/db.php';
             </a>
 
             <!-- Déconnexion -->
-            <a class="nav-link nav-icon" style="margin: 0px 10px;" href="<?= url('actions/logout.php') ?>" title="Déconnexion"
-              aria-label="Déconnexion">
+            <a class="nav-link nav-icon" style="margin: 0px 10px;" href="<?= url('actions/logout.php') ?>"
+              title="Déconnexion" aria-label="Déconnexion">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
@@ -140,3 +146,10 @@ require_once __DIR__ . '/../../includes/db.php';
       </nav>
     </div>
   </header>
+
+  <!-- Injecter les toasts PHP pour JavaScript -->
+  <script>
+    document.body.setAttribute('data-toasts', '<?= addslashes(json_encode($toasts)) ?>');
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="<?= url('assets/js/notifications.js') ?>"></script>

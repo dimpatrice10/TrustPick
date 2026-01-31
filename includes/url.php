@@ -1,111 +1,155 @@
 <?php
 /**
  * includes/url.php
- *
- * Helper d'URLs/chemins qui supporte :
- * - point d'entrée dans public/index.php
- * - cPanel (public comme DOCUMENT_ROOT)
- * - dev local sous /projet/public/index.php
- *
- * Fonctions fournies :
- * - url($path)        : URL absolue de base du projet (racine web détectée)
- * - public_url($path) : URL absolue pointant vers /public/ (entrypoint)
- * - asset($path)      : URL absolue d'un asset (CSS/JS/images) sous public
- * - path($path)       : chemin relatif pour href internes (sans slash initial)
- * - redirect($path)   : redirection HTTP (utilise public_url par défaut)
- * - base_path($path)  : chemin disque absolu côté serveur (équivalent à realpath project root)
+ * 
+ * Helper d'URLs/redirections PRODUCTION-READY
+ * 
+ * FONCTIONNE DEPUIS N'IMPORTE QUEL SOUS-DOSSIER:
+ * - /actions/logout.php ✓
+ * - /public/index.php ✓
+ * - /admin/dashboard.php ✓
+ * - /includes/... ✓
+ * 
+ * Le calcul de BASE_URL se fait via le filesystem (pas SCRIPT_NAME)
+ * pour garantir la cohérence peu importe d'où le script est appelé.
+ * 
+ * Fonctions:
+ * - url($path)        : URL absolue vers racine projet
+ * - public_url($path) : URL absolue vers /public/ (entry point)
+ * - asset($path)      : Alias de public_url pour assets
+ * - redirect($path)   : Redirection HTTP vers public/index.php?page=...
+ * - base_path($path)  : Chemin filesystem absolu
  */
 
-// protocole + host
-$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+// ============================================================================
+// CALCUL DES CONSTANTES (une seule fois)
+// ============================================================================
 
-// script courant (ex: /trustpick/public/index.php ou /index.php ou /trustpick/actions/login.php)
-$scriptName = $_SERVER['SCRIPT_NAME'] ?? '/';
-$scriptDir = rtrim(str_replace('\\', '/', dirname($scriptName)), '/');
+if (!defined('BASE_URL')) {
 
-// 1) déterminer base web (chemin relatif depuis la racine du domaine vers la racine du projet)
-$basePath = '';
-if (strpos($scriptName, '/public/') !== false) {
-    // cas fréquent en dev : http://host/project/public/index.php
-    $basePath = substr($scriptName, 0, strpos($scriptName, '/public/'));
-    $basePath = rtrim($basePath, '/');
-} else {
-    // cas où public est déjà DOCUMENT_ROOT (cPanel) ou index.php est à la racine
-    // on prend le dossier parent du script comme base candidate (peut être '')
-    $candidate = rtrim($scriptDir, '/');
-    $candidate = ($candidate === '/' || $candidate === '.') ? '' : $candidate;
-    $basePath = $candidate;
+    // 1) PROTOCOLE + HOST
+    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+
+    // 2) CHEMIN FILESYSTEM DU PROJET (source de vérité)
+    //    __DIR__ = includes/, donc parent = racine projet
+    $projectRoot = realpath(__DIR__ . '/..') ?: dirname(__DIR__);
+    $projectRoot = str_replace('\\', '/', $projectRoot); // normaliser Windows
+
+    // 3) DOCUMENT_ROOT du serveur
+    $docRoot = !empty($_SERVER['DOCUMENT_ROOT'])
+        ? str_replace('\\', '/', realpath($_SERVER['DOCUMENT_ROOT']) ?: $_SERVER['DOCUMENT_ROOT'])
+        : '';
+
+    // 4) CALCULER LE CHEMIN WEB DU PROJET
+    //    On compare le chemin filesystem du projet avec DOCUMENT_ROOT
+    //    Ex: docRoot=/var/www/html, project=/var/www/html/trustpick => webPath=/trustpick
+    $webBasePath = '';
+    if ($docRoot && strpos($projectRoot, $docRoot) === 0) {
+        $webBasePath = substr($projectRoot, strlen($docRoot));
+        $webBasePath = '/' . trim($webBasePath, '/');
+        if ($webBasePath === '/') {
+            $webBasePath = '';
+        }
+    } else {
+        // Fallback: extraire depuis SCRIPT_NAME en cherchant des marqueurs connus
+        $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
+
+        // Chercher /public/, /actions/, /admin/, /api/, /includes/ dans le chemin
+        $markers = ['/public/', '/actions/', '/admin/', '/api/', '/includes/', '/views/'];
+        foreach ($markers as $marker) {
+            if (($pos = strpos($scriptName, $marker)) !== false) {
+                $webBasePath = substr($scriptName, 0, $pos);
+                break;
+            }
+        }
+
+        // Si toujours vide et script finit par .php à la racine
+        if ($webBasePath === '' && preg_match('#^(/[^/]+)/[^/]+\.php$#', $scriptName, $m)) {
+            $webBasePath = $m[1];
+        }
+    }
+
+    // 5) DÉTECTER SI /public EST LE DOCUMENT_ROOT (cPanel, production)
+    $publicFsPath = $projectRoot . '/public';
+    $publicIsDocRoot = ($docRoot && file_exists($publicFsPath) && realpath($publicFsPath) === realpath($docRoot));
+
+    // 6) CONSTRUIRE LES URLS
+    $baseUrl = $protocol . '://' . $host . $webBasePath;
+    $baseUrl = rtrim($baseUrl, '/') . '/';
+
+    if ($publicIsDocRoot) {
+        // En production (cPanel), public/ est exposé à la racine du domaine
+        $publicUrl = $protocol . '://' . $host . '/';
+    } else {
+        // En dev, public/ est un sous-dossier
+        $publicUrl = rtrim($baseUrl, '/') . '/public/';
+    }
+
+    // 7) DÉFINIR LES CONSTANTES
+    define('BASE_URL', $baseUrl);
+    define('PUBLIC_URL', $publicUrl);
+    define('BASE_PATH', $projectRoot);
+    define('PUBLIC_IS_DOCROOT', $publicIsDocRoot);
 }
 
-// 2) chemins filesystem pour déduire si 'public' est document root sur le serveur
-$projectFs = realpath(__DIR__ . '/..');            // ex: /home/user/.../trustpick
-$publicFs = $projectFs . '/public';
-$publicFsReal = $publicFs && file_exists($publicFs) ? realpath($publicFs) : false;
-$docRootFs = !empty($_SERVER['DOCUMENT_ROOT']) ? realpath($_SERVER['DOCUMENT_ROOT']) : false;
-
-// 3) construire BASE_URL (absolue) pointant vers la racine web du projet détectée
-//    ex: http://localhost/trustpick/   OR http://example.com/
-$basePathForUrl = $basePath === '' ? '' : '/' . ltrim($basePath, '/');
-$baseUrl = $protocol . '://' . $host . $basePathForUrl . '/';
-
-// 4) déterminer PUBLIC_URL (URL absolue vers le dossier public exposé)
-//    cas A: public est DOCUMENT_ROOT -> PUBLIC_URL = http(s)://host/
-//    cas B: public apparaît dans l'URL -> PUBLIC_URL = BASE_URL + 'public/'
-//    cas C: public existe en FS mais n'est pas docroot -> PUBLIC_URL = BASE_URL + 'public/'
-//    cas D: fallback -> PUBLIC_URL = BASE_URL
-if ($publicFsReal && $docRootFs && $publicFsReal === $docRootFs) {
-    // public est le document root (cPanel ou déploiement où public/ est déjà exposé)
-    $publicUrl = $protocol . '://' . $host . '/';
-} elseif (strpos($scriptName, '/public/') !== false) {
-    // public présent explicitement dans l'URL (dev)
-    $publicUrl = rtrim($baseUrl, '/') . '/public/';
-} elseif ($publicFsReal) {
-    // public existe sur disque mais n'est pas docroot : on assume /{basePath}/public/
-    $publicUrl = rtrim($baseUrl, '/') . '/public/';
-} else {
-    // pas de dossier public détecté ; fallback sur BASE_URL
-    $publicUrl = $baseUrl;
-}
-
-// normalisations finales
-$BASE_URL = rtrim($baseUrl, '/') . '/';
-$PUBLIC_URL = rtrim($publicUrl, '/') . '/';
-define('BASE_URL', $BASE_URL);
-define('PUBLIC_URL', $PUBLIC_URL);
-define('BASE_PATH', $projectFs ?: realpath(__DIR__ . '/..'));
+// ============================================================================
+// FONCTIONS HELPERS
+// ============================================================================
 
 /**
- * url() : URL absolue vers la racine du projet
- * ex: url('index.php?page=home') => http://host/trustpick/index.php?page=home
+ * Retourne l'URL absolue vers la racine du projet
+ * 
+ * @param string $path Chemin relatif à ajouter
+ * @return string URL complète
+ * 
+ * Exemple: url('api/users.php') => http://localhost/trustpick/api/users.php
  */
 function url(string $path = ''): string
 {
+    if ($path === '') {
+        return BASE_URL;
+    }
     return rtrim(BASE_URL, '/') . '/' . ltrim($path, '/');
 }
 
 /**
- * public_url() : URL absolue pointant vers le dossier public (entry point)
- * ex: public_url('index.php?page=home') => http://host/trustpick/public/index.php?page=home
- * si public est docroot, renverra http://host/index.php?page=home
+ * Retourne l'URL absolue vers le dossier public (point d'entrée)
+ * 
+ * @param string $path Chemin relatif à ajouter
+ * @return string URL complète
+ * 
+ * Exemple: public_url('index.php?page=home') => http://localhost/trustpick/public/index.php?page=home
+ * En prod:  public_url('index.php?page=home') => https://monsite.com/index.php?page=home
  */
 function public_url(string $path = ''): string
 {
+    if ($path === '') {
+        return PUBLIC_URL;
+    }
     return rtrim(PUBLIC_URL, '/') . '/' . ltrim($path, '/');
 }
 
 /**
- * asset() : URL absolue pour assets (css/js/img) dans public/
- * ex: asset('assets/css/app.css') => http://host/.../public/assets/css/app.css   (ou /assets/css/app.css si public docroot)
+ * Retourne l'URL d'un asset (CSS, JS, images) dans public/
+ * Alias de public_url() pour la clarté du code
+ * 
+ * @param string $path Chemin de l'asset
+ * @return string URL complète
+ * 
+ * Exemple: asset('assets/css/app.css') => http://localhost/trustpick/public/assets/css/app.css
  */
 function asset(string $path = ''): string
 {
-    return rtrim(PUBLIC_URL, '/') . '/' . ltrim($path, '/');
+    return public_url($path);
 }
 
 /**
- * path() : chemin relatif pour liens internes (href) si tu veux sans base
- * ex: path('index.php?page=login') => 'index.php?page=login'
+ * Retourne un chemin relatif (sans base URL)
+ * Utile pour les liens href internes
+ * 
+ * @param string $path Chemin
+ * @return string Chemin nettoyé
  */
 function path(string $path = ''): string
 {
@@ -113,36 +157,83 @@ function path(string $path = ''): string
 }
 
 /**
- * redirect() : redirige proprement.
- * - Si $path commence par 'http' -> redirect absolue vers cette URL.
- * - Si $path commence par '/' -> redirect root-based (ex: '/index.php')
- * - Sinon -> par défaut on redirige vers public_url($path) car entrypoint = public/index.php
+ * Effectue une redirection HTTP vers le point d'entrée public/index.php
+ * 
+ * TOUJOURS redirige vers PUBLIC_URL, jamais vers /actions/ ou autre
+ * 
+ * @param string $path Destination (ex: 'index.php?page=home')
+ * @return never
+ * 
+ * Exemples d'appels et résultats:
+ *   redirect('index.php?page=home')     => Location: http://localhost/trustpick/public/index.php?page=home
+ *   redirect('index.php?page=login')    => Location: http://localhost/trustpick/public/index.php?page=login
+ *   redirect('https://google.com')      => Location: https://google.com
  */
-/**
- * Redirection HTTP propre
- */
-function redirect(string $path): void
+function redirect(string $path): never
 {
-    // Si c'est déjà une URL complète, on l'utilise
+    // 1) URL absolue externe : on redirige directement
     if (preg_match('#^https?://#i', $path)) {
         header('Location: ' . $path);
         exit;
     }
 
-    // On construit l'URL complète vers public/index.php
+    // 2) Construire l'URL vers public/
     $target = public_url($path);
 
-    // Envoie du header avec URL absolue
+    // 3) Sécurité : intercepter les anciens chemins /dashboard et les convertir
+    //    Ceci empêche toute redirection accidentelle vers des fichiers legacy
+    $legacyMappings = [
+        '#/dashboard/?$#' => 'index.php?page=user_dashboard',
+        '#/user/dashboard\.php#' => 'index.php?page=user_dashboard',
+        '#/admin/dashboard\.php#' => 'index.php?page=admin_dashboard',
+        '#/superadmin/dashboard\.php#' => 'index.php?page=superadmin_dashboard',
+    ];
+
+    foreach ($legacyMappings as $pattern => $replacement) {
+        if (preg_match($pattern, $target)) {
+            $target = public_url($replacement);
+            break;
+        }
+    }
+
+    // 4) Envoyer le header et terminer
     header('Location: ' . $target);
     exit;
 }
 
-
 /**
- * base_path() : chemin disque absolu côté serveur
- * ex: base_path('storage/logs') => /home/.../trustpick/storage/logs
+ * Retourne le chemin filesystem absolu vers un fichier/dossier du projet
+ * 
+ * @param string $path Chemin relatif depuis la racine projet
+ * @return string Chemin absolu
+ * 
+ * Exemple: base_path('storage/logs') => /var/www/html/trustpick/storage/logs
  */
 function base_path(string $path = ''): string
 {
-    return rtrim(BASE_PATH, DIRECTORY_SEPARATOR) . ($path ? DIRECTORY_SEPARATOR . ltrim($path, '/') : '');
+    if ($path === '') {
+        return BASE_PATH;
+    }
+    $separator = DIRECTORY_SEPARATOR;
+    return BASE_PATH . $separator . ltrim(str_replace(['/', '\\'], $separator, $path), $separator);
+}
+
+/**
+ * Fonction de debug (à supprimer en production)
+ * Affiche les constantes calculées
+ */
+function debug_urls(): void
+{
+    if (headers_sent()) {
+        echo "<pre>";
+    }
+    echo "BASE_URL:          " . BASE_URL . "\n";
+    echo "PUBLIC_URL:        " . PUBLIC_URL . "\n";
+    echo "BASE_PATH:         " . BASE_PATH . "\n";
+    echo "PUBLIC_IS_DOCROOT: " . (PUBLIC_IS_DOCROOT ? 'true' : 'false') . "\n";
+    echo "SCRIPT_NAME:       " . ($_SERVER['SCRIPT_NAME'] ?? 'N/A') . "\n";
+    echo "DOCUMENT_ROOT:     " . ($_SERVER['DOCUMENT_ROOT'] ?? 'N/A') . "\n";
+    if (headers_sent()) {
+        echo "</pre>";
+    }
 }

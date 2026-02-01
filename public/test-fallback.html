@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>🔥 Test PWA Fallback</title>
+    <link rel="manifest" href="/pwa-manifest.json" />
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+        background: #f0f0f0;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+      }
+      .success {
+        color: #28a745;
+        font-weight: bold;
+      }
+      .error {
+        color: #dc3545;
+        font-weight: bold;
+      }
+      .test {
+        margin: 15px 0;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+      }
+      button {
+        padding: 10px 20px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🔥 Test PWA Fallback (Fichiers Racine)</h1>
+      <p><strong>Cette page utilise UNIQUEMENT les fichiers à la racine :</strong></p>
+      <ul>
+        <li><code>/pwa-manifest.json</code></li>
+        <li><code>/pwa-worker.js</code></li>
+      </ul>
+
+      <div class="test">
+        <h3>📄 Test Manifest Fallback</h3>
+        <p id="manifest-status">Test en cours...</p>
+        <button onclick="testManifest()">Re-tester</button>
+      </div>
+
+      <div class="test">
+        <h3>⚙️ Test Service Worker Fallback</h3>
+        <p id="sw-status">Test en cours...</p>
+        <button onclick="testServiceWorker()">Re-tester</button>
+      </div>
+
+      <div class="test">
+        <h3>📲 Test Installation</h3>
+        <p id="install-status">En attente...</p>
+        <button onclick="testInstall()" id="install-btn">Test Install</button>
+      </div>
+    </div>
+
+    <script>
+      // Test manifest fallback
+      async function testManifest() {
+        try {
+          const response = await fetch('/pwa-manifest.json');
+          if (response.redirected) {
+            throw new Error('ENCORE REDIRIGÉ ! URL: ' + response.url);
+          }
+
+          if (response.status !== 200) {
+            throw new Error('Status: ' + response.status);
+          }
+
+          const manifest = await response.json();
+          document.getElementById('manifest-status').innerHTML =
+            `<span class="success">✅ Manifest fallback OK: ${manifest.name}</span>`;
+        } catch (error) {
+          document.getElementById('manifest-status').innerHTML =
+            `<span class="error">❌ Erreur: ${error.message}</span>`;
+        }
+      }
+
+      // Test service worker fallback
+      async function testServiceWorker() {
+        try {
+          // D'abord tester l'accès direct
+          const response = await fetch('/pwa-worker.js');
+          if (response.redirected) {
+            throw new Error('ENCORE REDIRIGÉ ! URL: ' + response.url);
+          }
+
+          if (response.status !== 200) {
+            throw new Error('Status: ' + response.status);
+          }
+
+          // Puis tenter l'enregistrement avec scope explicite
+          const registration = await navigator.serviceWorker.register('/pwa-worker.js', {
+            scope: '/'
+          });
+
+          document.getElementById('sw-status').innerHTML =
+            `<span class="success">✅ Service Worker fallback OK: ${registration.scope}</span>`;
+        } catch (error) {
+          document.getElementById('sw-status').innerHTML = `<span class="error">❌ Erreur: ${error.message}</span>`;
+        }
+      }
+
+      // Test installation
+      let deferredPrompt;
+
+      window.addEventListener('beforeinstallprompt', e => {
+        e.preventDefault();
+        deferredPrompt = e;
+        document.getElementById('install-status').innerHTML =
+          '<span class="success">✅ Installation disponible !</span>';
+      });
+
+      async function testInstall() {
+        if (deferredPrompt) {
+          try {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            document.getElementById('install-status').innerHTML = `Installation: ${outcome}`;
+          } catch (error) {
+            document.getElementById('install-status').innerHTML = `<span class="error">Erreur: ${error.message}</span>`;
+          }
+        } else {
+          document.getElementById('install-status').innerHTML = '⚠️ Pas de prompt (déjà installé ou iOS)';
+        }
+      }
+
+      // Tests automatiques au chargement
+      window.addEventListener('load', () => {
+        testManifest();
+        testServiceWorker();
+      });
+    </script>
+  </body>
+</html>

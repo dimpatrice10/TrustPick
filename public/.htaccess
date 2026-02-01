@@ -1,14 +1,16 @@
 <IfModule mod_rewrite.c>
   RewriteEngine On
   
-  # Empêcher la redirection du service worker et manifest
-  RewriteRule ^service-worker\.js$ - [L]
+  # IMPORTANT: Exclure complètement le dossier pwa des redirections
+  RewriteRule ^pwa/ - [L]
+  
+  # Exclure les fichiers PWA de la racine
+  RewriteRule ^pwa-.*\.(js|json)$ - [L]
+  RewriteRule ^service-worker\.js$ - [L] 
   RewriteRule ^manifest\.json$ - [L]
   RewriteRule ^offline\.html$ - [L]
 
-# Route requests to /assets/... to the local PHP proxy so files
-
-# stored in the project root `assets/` (outside public/) can be served.
+# Route requests to /assets/... to the local PHP proxy
 
 RewriteRule ^assets/(.\*)$ assets/index.php?f=$1 [L,QSA]
 
@@ -17,20 +19,20 @@ RewriteRule ^assets/(.\*)$ assets/index.php?f=$1 [L,QSA]
 </IfModule>
 
 <IfModule mod_headers.c>
-  # Service Worker headers
-  <FilesMatch "service-worker\.js$">
+  # Headers pour fichiers JavaScript
+  <FilesMatch "\.(js)$">
     Header set Service-Worker-Allowed "/"
     Header set Cache-Control "no-cache, no-store, must-revalidate"
     Header set Content-Type "application/javascript"
   </FilesMatch>
   
-  # Manifest headers  
-  <FilesMatch "manifest\.json$">
+  # Headers pour fichiers JSON (manifest)
+  <FilesMatch "\.json$">
     Header set Cache-Control "public, max-age=86400"
     Header set Content-Type "application/manifest+json"
   </FilesMatch>
   
-  # Offline page
+  # Headers pour page offline
   <FilesMatch "offline\.html$">
     Header set Cache-Control "public, max-age=3600"
   </FilesMatch>

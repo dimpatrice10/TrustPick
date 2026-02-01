@@ -38,8 +38,8 @@ $toasts = getToasts();
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="application-name" content="TrustPick">
 
-  <!-- Manifest & Icons -->
-  <link rel="manifest" href="<?= url('manifest.json') ?>">
+  <!-- Manifest & Icons (dynamique pour compatibilité multi-environnements) -->
+  <link rel="manifest" href="<?= url('manifest.php') ?>">
   <link rel="icon" type="image/png" sizes="192x192" href="<?= url('assets/img/icon-192.png') ?>">
   <link rel="icon" type="image/png" sizes="512x512" href="<?= url('assets/img/icon-512.png') ?>">
 

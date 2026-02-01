@@ -1,9 +1,37 @@
 <IfModule mod_rewrite.c>
   RewriteEngine On
 
-  # Route requests to /assets/... to the local PHP proxy so files
-  # stored in the project root `assets/` (outside public/) can be served.
-  RewriteRule ^assets/(.*)$ assets/index.php?f=$1 [L,QSA]
+# IMPORTANT: Ne pas rediriger les fichiers PWA
 
-  # Fallback: existing front controller behaviour is handled by root rules
+# Le service worker ne doit JAMAIS être redirigé
+
+RewriteRule ^sw\.php$ - [L]
+RewriteRule ^manifest\.php$ - [L]
+RewriteRule ^offline\.html$ - [L]
+RewriteRule ^service-worker\.js$ sw.php [L]
+RewriteRule ^manifest\.json$ manifest.php [L]
+
+# Route requests to /assets/... to the local PHP proxy so files
+
+# stored in the project root `assets/` (outside public/) can be served.
+
+RewriteRule ^assets/(.\*)$ assets/index.php?f=$1 [L,QSA]
+
+# Fallback: existing front controller behaviour is handled by root rules
+
+</IfModule>
+
+# Headers pour PWA
+
+<IfModule mod_headers.c>
+  # Service Worker headers
+  <FilesMatch "sw\.php$">
+    Header set Service-Worker-Allowed "/"
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+  </FilesMatch>
+  
+  # Manifest headers
+  <FilesMatch "manifest\.php$">
+    Header set Cache-Control "public, max-age=86400"
+  </FilesMatch>
 </IfModule>

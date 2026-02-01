@@ -1,18 +1,18 @@
 /**
  * TrustPick V2 - Service Worker
- * PWA installable sur Android, iOS et Desktop
+ * PWA installable sur iOS, Android, Windows, macOS, Linux
  * Version: 2.1.0
  */
 
 const CACHE_NAME = 'trustpick-v2.1';
-const OFFLINE_URL = '/TrustPick/public/index.php?page=home';
+const OFFLINE_URL = '/TrustPick/public/offline.html';
 
-// Ressources à mettre en cache lors de l'installation
+// Ressources essentielles à mettre en cache
 const ASSETS_TO_CACHE = [
   '/TrustPick/public/',
   '/TrustPick/public/index.php',
   '/TrustPick/public/index.php?page=home',
-  '/TrustPick/public/index.php?page=catalog',
+  '/TrustPick/public/offline.html',
   '/TrustPick/public/assets/css/app.css',
   '/TrustPick/public/assets/css/demo.css',
   '/TrustPick/public/assets/css/ui-enhancements.css',
@@ -28,17 +28,17 @@ const ASSETS_TO_CACHE = [
 // Installation du Service Worker
 self.addEventListener('install', event => {
   console.log('[ServiceWorker] Installation v2.1...');
-
   event.waitUntil(
     caches
       .open(CACHE_NAME)
       .then(cache => {
-        console.log('[ServiceWorker] Mise en cache des ressources');
-        // Cache progressif - ne pas bloquer si une ressource échoue
+        console.log('[ServiceWorker] Mise en cache des ressources essentielles');
+        // Utiliser addAll avec gestion d'erreur individuelle
         return Promise.allSettled(
           ASSETS_TO_CACHE.map(url =>
             cache.add(url).catch(err => {
-              console.log('[ServiceWorker] Impossible de cacher:', url, err);
+              console.warn('[ServiceWorker] Échec cache pour:', url);
+              return null;
             })
           )
         );
@@ -47,15 +47,13 @@ self.addEventListener('install', event => {
         console.log('[ServiceWorker] Installation terminée');
       })
   );
-
   // Activer immédiatement sans attendre
   self.skipWaiting();
 });
 
 // Activation du Service Worker
 self.addEventListener('activate', event => {
-  console.log('[ServiceWorker] Activation v2.1...');
-
+  console.log('[ServiceWorker] Activation...');
   event.waitUntil(
     caches
       .keys()
@@ -73,8 +71,7 @@ self.addEventListener('activate', event => {
         console.log('[ServiceWorker] Activation terminée');
       })
   );
-
-  // Prendre le contrôle immédiatement
+  // Prendre le contrôle de toutes les pages immédiatement
   self.clients.claim();
 });
 
@@ -87,57 +84,87 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Ignorer les requêtes vers d'autres domaines
-  if (!request.url.startsWith(self.location.origin)) {
-    return;
-  }
-
-  // Ignorer les requêtes API (toujours en réseau)
+  // Ignorer les requêtes API et actions
   if (request.url.includes('/api/') || request.url.includes('/actions/')) {
     return;
   }
 
-  // Ignorer les extensions de développement
-  if (request.url.includes('browser-sync') || request.url.includes('livereload')) {
+  // Ignorer les extensions Chrome, etc.
+  if (request.url.startsWith('chrome-extension://')) {
     return;
   }
 
   event.respondWith(
-    // Essayer le réseau d'abord
+    // Essayer d'abord le réseau
     fetch(request)
       .then(response => {
-        // Vérifier si la réponse est valide
-        if (!response || response.status !== 200 || response.type !== 'basic') {
+        // Vérifier que la réponse est valide
+        if (!response || response.status !== 200 || response.type === 'opaque') {
           return response;
         }
 
-        // Cloner la réponse pour la mettre en cache
+        // Cloner la réponse pour le cache
         const responseToCache = response.clone();
 
+        // Mettre en cache de manière asynchrone
         caches.open(CACHE_NAME).then(cache => {
           cache.put(request, responseToCache);
         });
 
         return response;
       })
-      .catch(() => {
-        // En cas d'erreur réseau, utiliser le cache
-        return caches.match(request).then(cachedResponse => {
-          if (cachedResponse) {
-            return cachedResponse;
-          }
+      .catch(async () => {
+        // En cas d'erreur réseau, chercher dans le cache
+        const cachedResponse = await caches.match(request);
 
-          // Si c'est une page HTML, retourner la page hors-ligne
-          if (request.headers.get('accept')?.includes('text/html')) {
-            return caches.match(OFFLINE_URL);
-          }
+        if (cachedResponse) {
+          return cachedResponse;
+        }
 
-          // Sinon, retourner une réponse vide
-          return new Response('', {
-            status: 408,
-            statusText: 'Request Timeout'
-          });
+        // Si c'est une navigation, afficher la page hors-ligne
+        if (request.mode === 'navigate' || request.headers.get('accept')?.includes('text/html')) {
+          const offlineResponse = await caches.match(OFFLINE_URL);
+          if (offlineResponse) {
+            return offlineResponse;
+          }
+        }
+
+        // Retourner une réponse d'erreur générique
+        return new Response('Contenu non disponible hors ligne', {
+          status: 503,
+          statusText: 'Service Unavailable',
+          headers: new Headers({
+            'Content-Type': 'text/plain'
+          })
         });
       })
   );
+});
+
+// Notification push
+self.addEventListener('push', event => {
+  const options = {
+    body: event.data ? event.data.text() : 'Nouvelle notification TrustPick',
+    icon: '/TrustPick/public/assets/img/icon-192.png',
+    badge: '/TrustPick/public/assets/img/icon-192.png',
+    vibrate: [100, 50, 100],
+    data: {
+      dateOfArrival: Date.now(),
+      primaryKey: 1
+    },
+    actions: [
+      { action: 'explore', title: 'Voir', icon: '/TrustPick/public/assets/img/icon-192.png' },
+      { action: 'close', title: 'Fermer' }
+    ]
+  };
+
+  event.waitUntil(self.registration.showNotification('TrustPick', options));
+});
+
+// Clic sur notification
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  if (event.action === 'explore') {
+    event.waitUntil(clients.openWindow('/TrustPick/public/index.php?page=notifications'));
+  }
 });

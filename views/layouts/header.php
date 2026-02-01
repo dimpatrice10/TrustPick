@@ -17,28 +17,33 @@ $toasts = getToasts();
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0066cc">
   <meta name="description" content="TrustPick - Gagnez de l'argent en laissant des avis sur vos produits préférés">
-  <title>TrustPick — Plateforme de recommandation des produits</title>
 
-  <!-- PWA Essential Meta Tags -->
-  <meta name="theme-color" content="#0d6efd">
+  <!-- PWA iOS Support -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="TrustPick">
+  <link rel="apple-touch-icon" href="<?= url('assets/img/icon-192.png') ?>">
+  <link rel="apple-touch-icon" sizes="152x152" href="<?= url('assets/img/icon-192.png') ?>">
+  <link rel="apple-touch-icon" sizes="180x180" href="<?= url('assets/img/icon-192.png') ?>">
+  <link rel="apple-touch-icon" sizes="167x167" href="<?= url('assets/img/icon-192.png') ?>">
+
+  <!-- PWA Windows/Edge Support -->
+  <meta name="msapplication-TileColor" content="#0066cc">
+  <meta name="msapplication-TileImage" content="<?= url('assets/img/icon-192.png') ?>">
+  <meta name="msapplication-config" content="none">
+
+  <!-- PWA Android/Chrome Support -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="application-name" content="TrustPick">
 
-  <!-- iOS PWA Meta Tags -->
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="TrustPick">
-  <link rel="apple-touch-icon" href="/TrustPick/public/assets/img/icon-192.png">
-  <link rel="apple-touch-icon" sizes="192x192" href="/TrustPick/public/assets/img/icon-192.png">
-  <link rel="apple-touch-icon" sizes="512x512" href="/TrustPick/public/assets/img/icon-512.png">
+  <!-- Manifest & Icons -->
+  <link rel="manifest" href="<?= url('manifest.json') ?>">
+  <link rel="icon" type="image/png" sizes="192x192" href="<?= url('assets/img/icon-192.png') ?>">
+  <link rel="icon" type="image/png" sizes="512x512" href="<?= url('assets/img/icon-512.png') ?>">
 
-  <!-- PWA Manifest -->
-  <link rel="manifest" href="/TrustPick/public/manifest.json">
-
-  <!-- Favicon -->
-  <link rel="icon" type="image/png" sizes="192x192" href="/TrustPick/public/assets/img/icon-192.png">
-  <link rel="icon" type="image/png" sizes="512x512" href="/TrustPick/public/assets/img/icon-512.png">
+  <title>TrustPick — Plateforme de recommandation des produits</title>
 
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
@@ -115,13 +120,6 @@ $toasts = getToasts();
       <nav class="tp-nav" role="navigation" aria-label="Navigation principale">
         <a class="nav-link" href="<?= url('index.php?page=catalog') ?>">Catalogue</a>
         <a class="nav-link" href="<?= url('index.php?page=company') ?>">Entreprises</a>
-
-        <!-- Bouton d'installation PWA -->
-        <button id="pwa-install-btn" class="btn btn-primary btn-sm pwa-install-btn d-none" type="button">
-          <i class="bi bi-download me-1"></i>
-          <span class="d-none d-md-inline">Installer</span>
-        </button>
-
         <?php if (!empty($_SESSION['user_id'])):
           try {
             $uSt = $pdo->prepare('SELECT u.id,u.name, COALESCE(u.balance,0) AS balance FROM users u WHERE u.id = ? LIMIT 1');

@@ -8,22 +8,21 @@
       <a href="<?= url('index.php?page=home') ?>">Accueil</a>
       <a href="<?= url('index.php?page=catalog') ?>">Catalogue</a>
       <a href="<?= url('index.php?page=login') ?>">Aide</a>
+      <!-- Bouton d'installation PWA -->
+      <button id="pwa-install-btn" class="pwa-install-btn footer-install-btn" style="display:none">
+        <i class="bi bi-download"></i>
+        <span>Installer l'app</span>
+      </button>
     </nav>
   </div>
 </footer>
 
-<!-- Bannière d'installation iOS -->
-<div id="ios-install-banner" class="ios-install-banner d-none">
-  <div class="ios-install-content">
-    <img src="/TrustPick/public/assets/img/icon-192.png" alt="TrustPick" class="ios-install-icon">
-    <div class="ios-install-text">
-      <strong>Installer TrustPick</strong>
-      <p>Appuyez sur <i class="bi bi-box-arrow-up"></i> puis "Sur l'écran d'accueil"</p>
-    </div>
-    <button id="ios-banner-close" class="ios-banner-close" aria-label="Fermer">
-      <i class="bi bi-x-lg"></i>
-    </button>
-  </div>
+<!-- Bouton d'installation flottant PWA -->
+<div id="pwa-install-floating" class="pwa-install-floating" style="display:none">
+  <button class="pwa-install-btn">
+    <i class="bi bi-download"></i>
+    <span>Installer TrustPick</span>
+  </button>
 </div>
 
 <!-- Bootstrap 5 JS Bundle (inclut Popper) -->
@@ -35,28 +34,25 @@
 
 <!-- PWA Service Worker Registration -->
 <script>
-  // Enregistrement du Service Worker
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/TrustPick/public/service-worker.js', {
-        scope: '/TrustPick/public/'
-      })
+      navigator.serviceWorker.register('<?= url('service-worker.js') ?>')
         .then(reg => {
-          console.log('[PWA] Service Worker enregistré avec succès:', reg.scope);
-
+          console.log('Service Worker enregistré:', reg.scope);
           // Vérifier les mises à jour
           reg.addEventListener('updatefound', () => {
             const newWorker = reg.installing;
-            console.log('[PWA] Nouveau Service Worker trouvé');
-
             newWorker.addEventListener('statechange', () => {
               if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                console.log('[PWA] Nouvelle version disponible');
+                // Nouvelle version disponible
+                if (confirm('Une nouvelle version de TrustPick est disponible. Mettre à jour ?')) {
+                  window.location.reload();
+                }
               }
             });
           });
         })
-        .catch(err => console.error('[PWA] Erreur Service Worker:', err));
+        .catch(err => console.log('Service Worker erreur:', err));
     });
   }
 </script>

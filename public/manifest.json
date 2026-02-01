@@ -1,29 +1,66 @@
 {
-  "name": "TrustPick - Plateforme d'Avis & Récompenses",
+  "name": "TrustPick",
   "short_name": "TrustPick",
-  "description": "Gagnez de l'argent en laissant des avis sur vos produits préférés",
+  "description": "Plateforme d'avis et recommandations produits en FCFA",
   "start_url": "/TrustPick/public/index.php?page=home",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#0066cc",
-  "orientation": "portrait-primary",
-  "icons": [
-    {
-      "src": "assets/img/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "assets/img/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    }
-  ],
-  "categories": ["finance", "shopping", "lifestyle"],
+  "theme_color": "#0d6efd",
+  "orientation": "portrait",
+  "scope": "/TrustPick/public/",
   "lang": "fr-FR",
   "dir": "ltr",
-  "scope": "/TrustPick/public/",
-  "prefer_related_applications": false
+  "categories": ["finance", "shopping", "lifestyle"],
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "/TrustPick/public/assets/img/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/TrustPick/public/assets/img/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/TrustPick/public/assets/img/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/TrustPick/public/assets/img/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/TrustPick/public/assets/img/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "TrustPick - Page d'accueil"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Catalogue",
+      "short_name": "Catalogue",
+      "description": "Voir tous les produits",
+      "url": "/TrustPick/public/index.php?page=catalog",
+      "icons": [{ "src": "/TrustPick/public/assets/img/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Mon compte",
+      "short_name": "Compte",
+      "description": "Accéder à mon tableau de bord",
+      "url": "/TrustPick/public/index.php?page=user_dashboard",
+      "icons": [{ "src": "/TrustPick/public/assets/img/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
 }

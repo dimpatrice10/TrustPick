@@ -32,11 +32,11 @@
 <script src="<?= url('assets/js/likes.js') ?>"></script>
 <script src="<?= url('assets/js/pwa-install.js') ?>"></script>
 
-<!-- PWA Service Worker Registration (dynamique) -->
+<!-- PWA Service Worker Registration (statique) -->
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('<?= url('sw.php') ?>')
+      navigator.serviceWorker.register('<?= url('service-worker.js') ?>')
         .then(reg => {
           console.log('Service Worker enregistré:', reg.scope);
           // Vérifier les mises à jour

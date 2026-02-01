@@ -1,3 +1,112 @@
+<?php
+/**
+ * build-pwa-production.php
+ * Script pour générer les fichiers PWA pour la production (scope à la racine)
+ */
+
+echo "🔧 Génération des fichiers PWA pour la production...\n";
+
+// En production, le scope est à la racine
+$scopePath = '/';
+
+// 1. Générer manifest.json pour production
+echo "📄 Génération de manifest.json pour production...\n";
+
+$manifest = [
+    'name' => "TrustPick - Plateforme d'Avis & Récompenses",
+    'short_name' => 'TrustPick',
+    'description' => "Gagnez de l'argent en laissant des avis sur vos produits préférés. Application disponible sur iOS, Android, Windows et Mac.",
+    'start_url' => '/index.php?page=home',
+    'id' => '/',
+    'display' => 'standalone',
+    'display_override' => ['window-controls-overlay', 'standalone', 'minimal-ui'],
+    'background_color' => '#ffffff',
+    'theme_color' => '#0066cc',
+    'orientation' => 'portrait-primary',
+    'icons' => [
+        [
+            'src' => '/assets/img/icon-192.png',
+            'sizes' => '192x192',
+            'type' => 'image/png',
+            'purpose' => 'any'
+        ],
+        [
+            'src' => '/assets/img/icon-192.png',
+            'sizes' => '192x192',
+            'type' => 'image/png',
+            'purpose' => 'maskable'
+        ],
+        [
+            'src' => '/assets/img/icon-512.png',
+            'sizes' => '512x512',
+            'type' => 'image/png',
+            'purpose' => 'any'
+        ],
+        [
+            'src' => '/assets/img/icon-512.png',
+            'sizes' => '512x512',
+            'type' => 'image/png',
+            'purpose' => 'maskable'
+        ]
+    ],
+    'screenshots' => [
+        [
+            'src' => '/assets/img/icon-512.png',
+            'sizes' => '512x512',
+            'type' => 'image/png',
+            'form_factor' => 'narrow',
+            'label' => "Écran d'accueil TrustPick"
+        ],
+        [
+            'src' => '/assets/img/icon-512.png',
+            'sizes' => '512x512',
+            'type' => 'image/png',
+            'form_factor' => 'wide',
+            'label' => 'TrustPick sur Desktop'
+        ]
+    ],
+    'categories' => ['finance', 'shopping', 'lifestyle', 'social'],
+    'lang' => 'fr-FR',
+    'dir' => 'ltr',
+    'scope' => '/',
+    'prefer_related_applications' => false,
+    'shortcuts' => [
+        [
+            'name' => 'Catalogue',
+            'short_name' => 'Catalogue',
+            'description' => 'Voir tous les produits',
+            'url' => '/index.php?page=catalog',
+            'icons' => [['src' => '/assets/img/icon-192.png', 'sizes' => '192x192']]
+        ],
+        [
+            'name' => 'Mon Portefeuille',
+            'short_name' => 'Portefeuille',
+            'description' => 'Gérer mes gains',
+            'url' => '/index.php?page=wallet',
+            'icons' => [['src' => '/assets/img/icon-192.png', 'sizes' => '192x192']]
+        ],
+        [
+            'name' => 'Mes Avis',
+            'short_name' => 'Avis',
+            'description' => 'Voir mes avis',
+            'url' => '/index.php?page=user_dashboard',
+            'icons' => [['src' => '/assets/img/icon-192.png', 'sizes' => '192x192']]
+        ]
+    ],
+    'related_applications' => [],
+    'handle_links' => 'preferred',
+    'launch_handler' => [
+        'client_mode' => 'navigate-existing'
+    ]
+];
+
+$manifestJson = json_encode($manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+file_put_contents(__DIR__ . '/manifest-production.json', $manifestJson);
+
+// 2. Générer service-worker.js pour production
+echo "⚙️  Génération de service-worker.js pour production...\n";
+
+$serviceWorkerContent = <<<'JS'
 /**
  * TrustPick V2 - Service Worker
  * PWA installable sur iOS, Android, Windows, macOS, Linux
@@ -155,3 +264,14 @@ self.addEventListener('notificationclick', event => {
     event.waitUntil(clients.openWindow(SCOPE_PATH + 'index.php?page=notifications'));
   }
 });
+JS;
+
+file_put_contents(__DIR__ . '/service-worker-production.js', $serviceWorkerContent);
+
+echo "✅ Fichiers PWA pour production générés avec succès !\n";
+echo "📂 Fichiers créés :\n";
+echo "   - manifest-production.json (scope: /)\n";
+echo "   - service-worker-production.js (scope: /)\n";
+echo "\n📝 Instructions :\n";
+echo "1. Pour LOCAL : utilisez manifest.json et service-worker.js\n";
+echo "2. Pour PRODUCTION : copiez les fichiers -production vers les noms standards\n";

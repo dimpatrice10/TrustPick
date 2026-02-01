@@ -21,8 +21,7 @@ const ASSETS = [
 self.addEventListener('install', event => {
   console.log('[SW] Install');
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(ASSETS).catch(() => console.log('[SW] Cache failed')))
+    caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS).catch(() => console.log('[SW] Cache failed')))
   );
   self.skipWaiting();
 });
@@ -31,9 +30,7 @@ self.addEventListener('install', event => {
 self.addEventListener('activate', event => {
   console.log('[SW] Activate');
   event.waitUntil(
-    caches.keys().then(names => 
-      Promise.all(names.map(name => name !== CACHE_NAME ? caches.delete(name) : null))
-    )
+    caches.keys().then(names => Promise.all(names.map(name => (name !== CACHE_NAME ? caches.delete(name) : null))))
   );
   self.clients.claim();
 });
@@ -43,7 +40,7 @@ self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
   if (event.request.url.includes('/api/')) return;
   if (event.request.url.includes('/actions/')) return;
-  
+
   event.respondWith(
     fetch(event.request)
       .then(response => {
@@ -59,7 +56,7 @@ self.addEventListener('fetch', event => {
           if (event.request.headers.get('accept')?.includes('text/html')) {
             return caches.match(OFFLINE_URL);
           }
-          return new Response('Offline', {status: 503});
+          return new Response('Offline', { status: 503 });
         });
       })
   );

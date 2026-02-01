@@ -1,5 +1,10 @@
 <IfModule mod_rewrite.c>
   RewriteEngine On
+  
+  # Empêcher la redirection du service worker et manifest
+  RewriteRule ^service-worker\.js$ - [L]
+  RewriteRule ^manifest\.json$ - [L]
+  RewriteRule ^offline\.html$ - [L]
 
 # Route requests to /assets/... to the local PHP proxy so files
 
@@ -11,17 +16,22 @@ RewriteRule ^assets/(.\*)$ assets/index.php?f=$1 [L,QSA]
 
 </IfModule>
 
-# Headers pour PWA
-
 <IfModule mod_headers.c>
   # Service Worker headers
   <FilesMatch "service-worker\.js$">
     Header set Service-Worker-Allowed "/"
     Header set Cache-Control "no-cache, no-store, must-revalidate"
+    Header set Content-Type "application/javascript"
   </FilesMatch>
   
-  # Manifest headers
+  # Manifest headers  
   <FilesMatch "manifest\.json$">
     Header set Cache-Control "public, max-age=86400"
+    Header set Content-Type "application/manifest+json"
+  </FilesMatch>
+  
+  # Offline page
+  <FilesMatch "offline\.html$">
+    Header set Cache-Control "public, max-age=3600"
   </FilesMatch>
 </IfModule>

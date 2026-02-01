@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Test PWA TrustPick</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+      }
+      .test {
+        margin: 10px 0;
+        padding: 10px;
+        border: 1px solid #ccc;
+      }
+      .success {
+        background: #d4edda;
+        border-color: #c3e6cb;
+      }
+      .error {
+        background: #f8d7da;
+        border-color: #f5c6cb;
+      }
+      .loading {
+        background: #d1ecf1;
+        border-color: #bee5eb;
+      }
+      button {
+        padding: 10px 20px;
+        margin: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🧪 Test PWA TrustPick</h1>
+
+    <div id="manifest-test" class="test loading">
+      <h3>📄 Test Manifest</h3>
+      <p id="manifest-status">Vérification...</p>
+    </div>
+
+    <div id="sw-test" class="test loading">
+      <h3>⚙️ Test Service Worker</h3>
+      <p id="sw-status">Vérification...</p>
+    </div>
+
+    <div id="icons-test" class="test loading">
+      <h3>🖼️ Test Icônes</h3>
+      <p id="icons-status">Vérification...</p>
+      <img id="icon-192" src="/assets/img/icon-192.png" width="48" height="48" onerror="this.style.display = 'none'" />
+      <img id="icon-512" src="/assets/img/icon-512.png" width="48" height="48" onerror="this.style.display = 'none'" />
+    </div>
+
+    <div id="install-test" class="test">
+      <h3>📲 Test Installation</h3>
+      <button id="install-btn" onclick="testInstall()">Tester Installation</button>
+      <p id="install-status">Prêt à tester</p>
+    </div>
+
+    <div id="cache-test" class="test">
+      <h3>💾 Test Cache</h3>
+      <button onclick="testCache()">Vérifier Cache</button>
+      <p id="cache-status">Cliquez pour tester</p>
+    </div>
+
+    <script>
+      // Test du manifest
+      async function testManifest() {
+        try {
+          const response = await fetch('/manifest.json');
+          const manifest = await response.json();
+
+          document.getElementById('manifest-status').textContent =
+            `✅ Manifest OK: ${manifest.name} (${manifest.icons.length} icônes)`;
+          document.getElementById('manifest-test').className = 'test success';
+        } catch (error) {
+          document.getElementById('manifest-status').textContent = `❌ Erreur manifest: ${error.message}`;
+          document.getElementById('manifest-test').className = 'test error';
+        }
+      }
+
+      // Test du service worker
+      async function testServiceWorker() {
+        try {
+          if ('serviceWorker' in navigator) {
+            const registration = await navigator.serviceWorker.register('/service-worker.js');
+            document.getElementById('sw-status').textContent = `✅ Service Worker OK: ${registration.scope}`;
+            document.getElementById('sw-test').className = 'test success';
+          } else {
+            throw new Error('Service Worker non supporté');
+          }
+        } catch (error) {
+          document.getElementById('sw-status').textContent = `❌ Erreur SW: ${error.message}`;
+          document.getElementById('sw-test').className = 'test error';
+        }
+      }
+
+      // Test des icônes
+      async function testIcons() {
+        try {
+          const icon192 = document.getElementById('icon-192');
+          const icon512 = document.getElementById('icon-512');
+
+          await new Promise(resolve => {
+            let loaded = 0;
+
+            icon192.onload = () => {
+              loaded++;
+              if (loaded === 2) resolve();
+            };
+            icon512.onload = () => {
+              loaded++;
+              if (loaded === 2) resolve();
+            };
+
+            setTimeout(resolve, 2000); // timeout après 2s
+          });
+
+          document.getElementById('icons-status').textContent = `✅ Icônes chargées`;
+          document.getElementById('icons-test').className = 'test success';
+        } catch (error) {
+          document.getElementById('icons-status').textContent = `❌ Erreur icônes: ${error.message}`;
+          document.getElementById('icons-test').className = 'test error';
+        }
+      }
+
+      // Test d'installation
+      let deferredPrompt;
+
+      window.addEventListener('beforeinstallprompt', e => {
+        e.preventDefault();
+        deferredPrompt = e;
+        document.getElementById('install-status').textContent = '✅ Installation disponible';
+      });
+
+      async function testInstall() {
+        if (deferredPrompt) {
+          try {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            document.getElementById('install-status').textContent = `Installation: ${outcome}`;
+          } catch (error) {
+            document.getElementById('install-status').textContent = `Erreur installation: ${error.message}`;
+          }
+        } else {
+          document.getElementById('install-status').textContent =
+            "⚠️ Pas de prompt d'installation (déjà installé ou iOS)";
+        }
+      }
+
+      // Test du cache
+      async function testCache() {
+        try {
+          const cacheName = 'trustpick-v2.3';
+          const cache = await caches.open(cacheName);
+          const keys = await cache.keys();
+
+          document.getElementById('cache-status').textContent = `✅ Cache: ${keys.length} fichiers cachés`;
+        } catch (error) {
+          document.getElementById('cache-status').textContent = `❌ Erreur cache: ${error.message}`;
+        }
+      }
+
+      // Lancer les tests au chargement
+      window.addEventListener('load', () => {
+        testManifest();
+        testServiceWorker();
+        testIcons();
+      });
+    </script>
+  </body>
+</html>

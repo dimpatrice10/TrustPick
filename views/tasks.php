@@ -1,11 +1,13 @@
 <?php
 /**
  * Page Tâches Quotidiennes - TrustPick V2
- * Affiche les tâches disponibles et l'historique
+ * Affiche les tâches disponibles dans l'ordre obligatoire
+ * UTILISE TaskManager pour l'ordre strict
  */
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/url.php';
 require_once __DIR__ . '/../includes/helpers.php';
+require_once __DIR__ . '/../includes/task_manager.php';
 
 if (session_status() === PHP_SESSION_NONE)
     session_start();
@@ -24,12 +26,20 @@ $balStmt = $pdo->prepare('SELECT COALESCE(balance, 0) FROM users WHERE id = ?');
 $balStmt->execute([$uid]);
 $balance = floatval($balStmt->fetchColumn());
 
-// Récupérer les définitions de tâches
-$tasksDefStmt = $pdo->query('SELECT * FROM tasks_definitions WHERE is_active = 1 ORDER BY reward_amount DESC');
+// UTILISER TaskManager pour obtenir les tâches ordonnées
+$dailyTasksStatus = TaskManager::getDailyTasksStatus($uid, $pdo);
+
+// Récupérer les définitions de tâches (pour compatibilité)
+$tasksDefStmt = $pdo->query('SELECT * FROM tasks_definitions WHERE is_active = 1 ORDER BY id');
 $tasksDef = $tasksDefStmt->fetchAll();
 
+// Mapper par task_code pour référence facile
+$tasksDefByCode = [];
+foreach ($tasksDef as $td) {
+    $tasksDefByCode[$td['task_code']] = $td;
+}
+
 // Récupérer les tâches complétées par l'utilisateur aujourd'hui
-// FIX: La colonne s'appelle task_id, pas task_definition_id
 $todayStart = date('Y-m-d 00:00:00');
 $completedTodayStmt = $pdo->prepare('
     SELECT task_id, COUNT(*) as count 
@@ -140,105 +150,116 @@ $history = $historyStmt->fetchAll();
         </div>
     </div>
 
-    <!-- Tâches disponibles -->
+    <!-- Tâches disponibles - ORDONNÉES -->
     <div class="row mb-4">
         <div class="col-12">
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-white border-bottom py-3">
-                    <h5 class="mb-0"><i class="bi bi-list-task me-2"></i>Tâches Disponibles</h5>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-list-ol me-2"></i>Tâches Quotidiennes Obligatoires</h5>
+                        <span class="badge bg-info"><i class="bi bi-info-circle me-1"></i>Respectez l'ordre</span>
+                    </div>
                 </div>
                 <div class="card-body p-0">
-                    <?php if (empty($tasksDef)): ?>
+                    <?php if (empty($dailyTasksStatus)): ?>
                         <div class="text-center py-5">
                             <div class="display-4 mb-3 text-muted"><i class="bi bi-calendar-x"></i></div>
                             <p class="text-muted">Aucune tâche disponible pour le moment</p>
                         </div>
                     <?php else: ?>
                         <div class="list-group list-group-flush">
-                            <?php foreach ($tasksDef as $task):
-                                $taskId = $task['id'];
-                                $isDaily = !empty($task['is_daily']);
-                                $completedCount = $completedToday[$taskId] ?? 0;
-                                $everCompleted = in_array($taskId, $allCompleted);
-
-                                // Déterminer si la tâche peut être faite
-                                $canDo = true;
-                                $statusText = '';
-                                $statusClass = '';
-
-                                if ($isDaily) {
-                                    // Tâche quotidienne: peut être refaite chaque jour
-                                    if ($completedCount > 0) {
-                                        $canDo = false;
-                                        $statusText = 'Fait aujourd\'hui';
-                                        $statusClass = 'bg-success';
-                                    } else {
-                                        $statusText = 'Disponible';
-                                        $statusClass = 'bg-primary';
-                                    }
-                                } else {
-                                    // Tâche unique: ne peut être faite qu'une fois
-                                    if ($everCompleted) {
-                                        $canDo = false;
-                                        $statusText = 'Déjà complétée';
-                                        $statusClass = 'bg-secondary';
-                                    } else {
-                                        $statusText = 'Unique';
-                                        $statusClass = 'bg-warning text-dark';
-                                    }
-                                }
+                            <?php
+                            $stepNumber = 1;
+                            foreach ($dailyTasksStatus as $taskStatus):
+                                $taskCode = $taskStatus['task_code'];
+                                $isCompleted = $taskStatus['is_completed'];
+                                $canExecute = $taskStatus['can_execute'];
+                                $blockedBy = $taskStatus['blocked_by'] ?? null;
+                                $reward = $taskStatus['reward_amount'];
+                                $taskName = $taskStatus['task_name'];
+                                $description = $taskStatus['description'];
 
                                 // Icônes par type de tâche
                                 $taskIcons = [
                                     'leave_review' => 'bi-star',
                                     'recommend_product' => 'bi-hand-thumbs-up',
                                     'like_review' => 'bi-heart',
+                                    'deposit_5000' => 'bi-wallet',
                                     'invite_user' => 'bi-person-plus',
                                     'daily_login' => 'bi-door-open'
                                 ];
-                                $taskIcon = $taskIcons[$task['task_code'] ?? ''] ?? 'bi-check-square';
+                                $taskIcon = $taskIcons[$taskCode] ?? 'bi-check-square';
+
+                                // Couleurs selon le statut
+                                if ($isCompleted) {
+                                    $statusClass = 'bg-success';
+                                    $statusText = '<i class="bi bi-check-circle me-1"></i>Complété';
+                                    $cardClass = 'bg-success bg-opacity-10';
+                                } elseif ($canExecute) {
+                                    $statusClass = 'bg-primary';
+                                    $statusText = '<i class="bi bi-play-circle me-1"></i>Disponible';
+                                    $cardClass = '';
+                                } else {
+                                    $statusClass = 'bg-secondary';
+                                    $statusText = '<i class="bi bi-lock me-1"></i>Verrouillé';
+                                    $cardClass = 'bg-light';
+                                }
                                 ?>
-                                <div class="list-group-item py-3 <?= !$canDo ? 'bg-light' : '' ?>">
+                                <div class="list-group-item py-3 <?= $cardClass ?>">
                                     <div class="d-flex justify-content-between align-items-center">
                                         <div class="d-flex align-items-center gap-3">
-                                            <div class="task-icon bg-<?= $canDo ? 'primary' : 'secondary' ?> bg-opacity-10 text-<?= $canDo ? 'primary' : 'secondary' ?>"
+                                            <!-- Numéro d'étape -->
+                                            <div class="step-number <?= $isCompleted ? 'bg-success' : ($canExecute ? 'bg-primary' : 'bg-secondary') ?> text-white"
+                                                style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:16px;">
+                                                <?php if ($isCompleted): ?>
+                                                    <i class="bi bi-check"></i>
+                                                <?php else: ?>
+                                                    <?= $stepNumber ?>
+                                                <?php endif; ?>
+                                            </div>
+                                            <!-- Icône de la tâche -->
+                                            <div class="task-icon <?= $isCompleted ? 'bg-success' : ($canExecute ? 'bg-primary' : 'bg-secondary') ?> bg-opacity-10 text-<?= $isCompleted ? 'success' : ($canExecute ? 'primary' : 'secondary') ?>"
                                                 style="width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;">
                                                 <i class="bi <?= $taskIcon ?>"></i>
                                             </div>
                                             <div>
-                                                <h6 class="mb-1 <?= !$canDo ? 'text-muted' : '' ?>">
-                                                    <?= htmlspecialchars($task['task_name']) ?>
+                                                <h6 class="mb-1 <?= !$canExecute && !$isCompleted ? 'text-muted' : '' ?>">
+                                                    <?= htmlspecialchars($taskName) ?>
                                                 </h6>
                                                 <p class="mb-0 small text-muted">
-                                                    <?= htmlspecialchars($task['description'] ?? '') ?>
+                                                    <?= htmlspecialchars($description ?? '') ?>
                                                 </p>
                                                 <span class="badge <?= $statusClass ?> mt-1">
-                                                    <?php if (!$canDo): ?><i class="bi bi-check me-1"></i><?php endif; ?>
                                                     <?= $statusText ?>
                                                 </span>
-                                                <?php if ($isDaily): ?>
-                                                    <span class="badge bg-info ms-1"><i
-                                                            class="bi bi-arrow-repeat me-1"></i>Quotidienne</span>
+                                                <?php if ($blockedBy && !$isCompleted): ?>
+                                                    <span class="badge bg-warning text-dark ms-1">
+                                                        <i class="bi bi-arrow-left me-1"></i>Faire d'abord:
+                                                        <?= htmlspecialchars($blockedBy) ?>
+                                                    </span>
                                                 <?php endif; ?>
                                             </div>
                                         </div>
                                         <div class="text-end">
-                                            <div class="fw-bold text-success mb-2">+<?= formatFCFA($task['reward_amount']) ?>
-                                            </div>
-                                            <?php if ($canDo): ?>
-                                                <button class="btn btn-sm btn-primary btn-do-task" data-task-id="<?= $taskId ?>"
-                                                    data-task-code="<?= htmlspecialchars($task['task_code'] ?? '') ?>">
-                                                    Faire la tâche <i class="bi bi-arrow-right"></i>
+                                            <div class="fw-bold text-success mb-2">+<?= formatFCFA($reward) ?></div>
+                                            <?php if ($isCompleted): ?>
+                                                <button class="btn btn-sm btn-success" disabled>
+                                                    <i class="bi bi-check-circle me-1"></i>Fait
+                                                </button>
+                                            <?php elseif ($canExecute): ?>
+                                                <button class="btn btn-sm btn-primary btn-do-task"
+                                                    data-task-code="<?= htmlspecialchars($taskCode) ?>">
+                                                    Faire <i class="bi bi-arrow-right"></i>
                                                 </button>
                                             <?php else: ?>
                                                 <button class="btn btn-sm btn-secondary" disabled>
-                                                    <?= $isDaily && $completedCount > 0 ? 'Demain' : 'Terminé' ?>
+                                                    <i class="bi bi-lock me-1"></i>Verrouillé
                                                 </button>
                                             <?php endif; ?>
                                         </div>
                                     </div>
                                 </div>
-                            <?php endforeach; ?>
+                                <?php $stepNumber++; endforeach; ?>
                         </div>
                     <?php endif; ?>
                 </div>
@@ -251,8 +272,8 @@ $history = $historyStmt->fetchAll();
         <div class="col-12">
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-white border-bottom py-3">
-                    <h5 class="mb-0">📜 Historique des Tâches</h5>
-                </div><i class="bi bi-clock-history me-2"></i>
+                    <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Historique des Tâches</h5>
+                </div>
                 <div class="card-body p-0">
                     <?php if (empty($history)): ?>
                         <div class="text-center py-4">
@@ -308,11 +329,10 @@ $history = $historyStmt->fetchAll();
         // Gestion des boutons de tâche
         document.querySelectorAll('.btn-do-task').forEach(btn => {
             btn.addEventListener('click', function () {
-                const taskId = this.dataset.taskId;
-                const taskType = this.dataset.taskType;
+                const taskCode = this.dataset.taskCode;
 
                 // Rediriger vers la page appropriée selon le type de tâche
-                switch (taskType) {
+                switch (taskCode) {
                     case 'leave_review':
                         window.location.href = '<?= url("index.php?page=catalog") ?>';
                         break;
@@ -322,26 +342,30 @@ $history = $historyStmt->fetchAll();
                     case 'like_review':
                         window.location.href = '<?= url("index.php?page=catalog") ?>';
                         break;
+                    case 'deposit_5000':
+                        window.location.href = '<?= url("index.php?page=wallet") ?>';
+                        break;
                     case 'invite_user':
                         window.location.href = '<?= url("index.php?page=referrals") ?>';
                         break;
                     case 'daily_login':
                         // Compléter automatiquement la tâche de connexion quotidienne
-                        completeTask(taskId);
+                        completeTask(taskCode);
                         break;
                     default:
-                        alert('Rendez-vous sur la page correspondante pour compléter cette tâche.');
+                        // Rediriger vers le catalogue par défaut
+                        window.location.href = '<?= url("index.php?page=catalog") ?>';
                 }
             });
         });
 
-        function completeTask(taskId) {
+        function completeTask(taskCode) {
             fetch('<?= url("actions/complete_task.php") ?>', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded'
                 },
-                body: 'task_id=' + taskId
+                body: 'task_code=' + taskCode
             })
                 .then(r => r.json())
                 .then(data => {

@@ -156,6 +156,27 @@ $topTransactions = $pdo->query('
         </div>
     </div>
 
+    <!-- Génération en masse d'entreprises -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm bg-success bg-opacity-10">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                        <div>
+                            <h5 class="mb-1"><i class="bi bi-building-add me-2"></i>Génération Automatique d'Entreprises
+                            </h5>
+                            <p class="text-muted mb-0 small">Créez plusieurs entreprises avec leurs admins en un clic
+                            </p>
+                        </div>
+                        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#generateCompaniesModal">
+                            <i class="bi bi-plus-circle me-1"></i>Générer des Entreprises
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Utilisateurs Récents -->
     <div class="row mb-4">
         <div class="col-lg-6">
@@ -200,7 +221,7 @@ $topTransactions = $pdo->query('
                                         <p class="mb-0 small text-muted"><?php echo htmlspecialchars($company['slug']); ?></p>
                                     </div>
                                     <span class="badge <?php echo $company['is_active'] ? 'bg-success' : 'bg-secondary'; ?>">
-                                        <?php echo $company['is_active'] ? '✓ Actif' : '✗ Inactif'; ?>
+                                        <?php echo $company['is_active'] ? '<i class="bi bi-check-circle"></i> Actif' : '<i class="bi bi-x-circle"></i> Inactif'; ?>
                                     </span>
                                 </div>
                             <?php endforeach; ?>
@@ -265,3 +286,71 @@ $topTransactions = $pdo->query('
         </div>
     </div>
 </main>
+
+<!-- Modal Génération d'Entreprises -->
+<div class="modal fade" id="generateCompaniesModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="bi bi-building-add me-2"></i>Générer des Entreprises</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="generateCompaniesForm" action="<?= url('actions/superadmin_generate_companies.php') ?>"
+                method="POST">
+                <div class="modal-body">
+                    <div class="alert alert-info small">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Chaque entreprise sera créée avec un administrateur dédié (CAU auto-généré).
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Nombre d'entreprises à générer</label>
+                        <select name="count" class="form-select" required>
+                            <option value="3">3 entreprises</option>
+                            <option value="5" selected>5 entreprises</option>
+                            <option value="10">10 entreprises</option>
+                            <option value="15">15 entreprises</option>
+                            <option value="20">20 entreprises (max)</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Secteur d'activité (optionnel)</label>
+                        <select name="sector" class="form-select">
+                            <option value="">Aléatoire (tous secteurs)</option>
+                            <option value="tech">Technologies & Informatique</option>
+                            <option value="commerce">Commerce & Distribution</option>
+                            <option value="services">Services</option>
+                            <option value="industrie">Industrie & Production</option>
+                            <option value="alimentation">Alimentation & Restauration</option>
+                            <option value="mode">Mode & Beauté</option>
+                            <option value="sante">Santé & Bien-être</option>
+                        </select>
+                    </div>
+
+                    <div class="form-check mb-3">
+                        <input type="checkbox" name="generate_products" value="1" class="form-check-input"
+                            id="genProductsCheck" checked>
+                        <label class="form-check-label" for="genProductsCheck">
+                            Générer aussi 5-10 produits par entreprise
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-success" id="btnGenerateCompanies">
+                        <i class="bi bi-building-add me-1"></i>Générer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('generateCompaniesForm')?.addEventListener('submit', function (e) {
+        const btn = document.getElementById('btnGenerateCompanies');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Génération...';
+    });
+</script>

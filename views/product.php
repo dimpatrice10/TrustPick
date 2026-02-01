@@ -28,9 +28,42 @@ $stats = $avg->fetch();
 $avg_rating = $stats['avg_rating'] ? round($stats['avg_rating'], 1) : 'N/A';
 $review_count = $stats['cnt'] ?? 0;
 
-$reviews = $pdo->prepare('SELECT r.*, u.name AS user_name FROM reviews r LEFT JOIN users u ON r.user_id = u.id WHERE r.product_id = ? ORDER BY r.created_at DESC LIMIT 10');
+// Récupérer les avis avec le nombre de likes
+$reviews = $pdo->prepare('
+  SELECT r.*, u.name AS user_name, COALESCE(r.likes_count, 0) as likes_count
+  FROM reviews r 
+  LEFT JOIN users u ON r.user_id = u.id 
+  WHERE r.product_id = ? 
+  ORDER BY r.created_at DESC 
+  LIMIT 10
+');
 $reviews->execute([$id]);
 $reviews = $reviews->fetchAll();
+
+// Récupérer les likes de l'utilisateur connecté pour ces avis
+$userLikes = [];
+if (!empty($_SESSION['user_id'])) {
+  $reviewIds = array_column($reviews, 'id');
+  if (!empty($reviewIds)) {
+    $placeholders = implode(',', array_fill(0, count($reviewIds), '?'));
+
+    // Essayer d'abord review_likes, sinon review_reactions
+    try {
+      $likesStmt = $pdo->prepare("SELECT review_id FROM review_likes WHERE user_id = ? AND review_id IN ($placeholders)");
+      $likesStmt->execute(array_merge([$_SESSION['user_id']], $reviewIds));
+      $userLikes = $likesStmt->fetchAll(PDO::FETCH_COLUMN);
+    } catch (Exception $e) {
+      // Fallback sur review_reactions
+      try {
+        $likesStmt = $pdo->prepare("SELECT review_id FROM review_reactions WHERE user_id = ? AND review_id IN ($placeholders) AND reaction_type = 'like'");
+        $likesStmt->execute(array_merge([$_SESSION['user_id']], $reviewIds));
+        $userLikes = $likesStmt->fetchAll(PDO::FETCH_COLUMN);
+      } catch (Exception $e2) {
+        $userLikes = [];
+      }
+    }
+  }
+}
 ?>
 
 <main class="container product-page">
@@ -90,8 +123,11 @@ $reviews = $reviews->fetchAll();
         style="background:white;padding:16px;border-radius:12px;border:1px solid #e0e4e8;margin-bottom:12px;box-shadow:0 4px 12px rgba(0,0,0,0.04)">
         Aucun avis pour le moment. Soyez le premier !</div>
     <?php else: ?>
-      <?php foreach ($reviews as $r): ?>
-        <div
+      <?php foreach ($reviews as $r):
+        $isLiked = in_array($r['id'], $userLikes);
+        $likesCount = intval($r['likes_count']);
+        ?>
+        <div class="review-card"
           style="background:white;padding:16px;border-radius:12px;border:1px solid #e0e4e8;margin-bottom:12px;box-shadow:0 4px 12px rgba(0,0,0,0.08)">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
             <div>
@@ -102,12 +138,18 @@ $reviews = $reviews->fetchAll();
             </div>
             <span style="color:#f59e0b;font-weight:600"><?= str_repeat('★', intval($r['rating'])) ?></span>
           </div>
-          <p style="margin:0"><?= nl2br(htmlspecialchars($r['body'])) ?></p>
-          <div style="display:flex;gap:12px;margin-top:12px;font-size:12px">
-            <button style="background:none;border:none;color:#0066cc;cursor:pointer;padding:0;font-weight:500">▲
-              Utile</button>
-            <button style="background:none;border:none;color:#6c757d;cursor:pointer;padding:0;font-weight:500">▼ Non
-              utile</button>
+          <p style="margin:0 0 12px"><?= nl2br(htmlspecialchars($r['body'])) ?></p>
+
+          <!-- Bouton Like -->
+          <div class="review-actions"
+            style="display:flex;gap:12px;align-items:center;padding-top:12px;border-top:1px solid #f0f0f0">
+            <button class="like-btn <?= $isLiked ? 'liked' : '' ?>" data-review-id="<?= intval($r['id']) ?>"
+              aria-pressed="<?= $isLiked ? 'true' : 'false' ?>"
+              title="<?= $isLiked ? 'Retirer le like' : 'Aimer cet avis' ?>">
+              <i class="bi bi-hand-thumbs-up<?= $isLiked ? '-fill' : '' ?>"></i>
+              <span class="like-count"><?= $likesCount ?></span>
+              <span class="like-text"><?= $likesCount > 1 ? 'likes' : 'like' ?></span>
+            </button>
           </div>
         </div>
       <?php endforeach; ?>
@@ -247,3 +289,98 @@ $reviews = $reviews->fetchAll();
   </div>
 
 </main>
+
+<!-- Styles pour les boutons Like -->
+<style>
+  .like-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    background: #f8f9fa;
+    border: 1px solid #e0e4e8;
+    border-radius: 20px;
+    color: #6c757d;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .like-btn:hover {
+    background: #e6f0ff;
+    border-color: #0066cc;
+    color: #0066cc;
+  }
+
+  .like-btn.liked {
+    background: #0066cc;
+    border-color: #0066cc;
+    color: white;
+  }
+
+  .like-btn.liked:hover {
+    background: #0052a3;
+  }
+
+  .like-btn.loading {
+    opacity: 0.7;
+    pointer-events: none;
+  }
+
+  .like-btn i {
+    font-size: 16px;
+  }
+
+  .like-count {
+    font-weight: 600;
+  }
+
+  .like-text {
+    font-weight: 400;
+  }
+
+  /* Toast pour les likes */
+  .like-toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 12px 20px;
+    background: #333;
+    color: white;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    z-index: 10001;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  .like-toast.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .like-toast-success {
+    background: #10b981;
+  }
+
+  .like-toast-error {
+    background: #ef4444;
+  }
+
+  .like-toast-info {
+    background: #0066cc;
+  }
+
+  .like-toast i {
+    font-size: 18px;
+  }
+</style>
+
+<!-- Script JS pour les likes -->
+<script src="<?= url('public/assets/js/likes.js') ?>"></script>

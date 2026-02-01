@@ -122,6 +122,35 @@ $canWithdraw = $balance >= $minWithdrawal;
     </div>
   </div>
 
+  <!-- Section Dépôt - Tâche obligatoire -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card border-0 shadow-sm border-primary">
+        <div class="card-body">
+          <div class="row align-items-center">
+            <div class="col-md-8">
+              <h5 class="mb-2"><i class="bi bi-plus-circle-fill text-primary me-2"></i>Effectuer un Dépôt</h5>
+              <p class="text-muted mb-2">
+                Le dépôt minimum de <strong>5000 FCFA</strong> est une tâche quotidienne obligatoire pour débloquer
+                toutes vos récompenses.
+              </p>
+              <small class="text-info">
+                <i class="bi bi-info-circle me-1"></i>
+                Vos dépôts sont sécurisés et ajoutés à votre solde immédiatement.
+              </small>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+              <button type="button" class="btn btn-primary btn-lg" data-bs-toggle="modal"
+                data-bs-target="#depositModal">
+                <i class="bi bi-wallet-fill me-1"></i>Déposer
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- KPIs -->
   <div class="row mb-4">
     <div class="col-md-3 col-6 mb-3">
@@ -349,3 +378,81 @@ $canWithdraw = $balance >= $minWithdrawal;
     </div>
   </div>
 </div>
+
+<!-- Modal de dépôt -->
+<div class="modal fade" id="depositModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title"><i class="bi bi-wallet-fill me-2"></i>Effectuer un Dépôt</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="POST" action="<?= url('actions/deposit.php') ?>" id="depositForm">
+        <div class="modal-body">
+          <div class="alert alert-info mb-3">
+            <i class="bi bi-info-circle me-1"></i>
+            <strong>Minimum requis :</strong> 5000 FCFA<br>
+            <small>Ce dépôt compte comme tâche quotidienne.</small>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Montant à déposer (FCFA) <span class="text-danger">*</span></label>
+            <input type="number" name="amount" class="form-control form-control-lg" min="5000" step="100"
+              placeholder="Ex: 5000" value="5000" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Moyen de paiement <span class="text-danger">*</span></label>
+            <select name="method" class="form-select" required>
+              <option value="mobile_money">Mobile Money (MTN/Orange)</option>
+              <option value="orange_money">Orange Money</option>
+              <option value="wave">Wave</option>
+              <option value="bank_transfer">Virement bancaire</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Numéro de téléphone (pour confirmation)</label>
+            <input type="tel" name="phone" class="form-control" placeholder="Ex: +237 6XX XXX XXX">
+          </div>
+
+          <!-- Montants rapides -->
+          <div class="mb-3">
+            <label class="form-label">Montants rapides</label>
+            <div class="d-flex flex-wrap gap-2">
+              <button type="button" class="btn btn-outline-primary btn-quick-amount" data-amount="5000">5 000</button>
+              <button type="button" class="btn btn-outline-primary btn-quick-amount" data-amount="10000">10 000</button>
+              <button type="button" class="btn btn-outline-primary btn-quick-amount" data-amount="20000">20 000</button>
+              <button type="button" class="btn btn-outline-primary btn-quick-amount" data-amount="50000">50 000</button>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+          <button type="submit" class="btn btn-primary" id="btnDeposit">
+            <i class="bi bi-check-circle me-1"></i>Confirmer le dépôt
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Montants rapides pour le dépôt
+  document.querySelectorAll('.btn-quick-amount').forEach(btn => {
+    btn.addEventListener('click', function () {
+      document.querySelector('input[name="amount"]').value = this.dataset.amount;
+      // Mettre en surbrillance le bouton sélectionné
+      document.querySelectorAll('.btn-quick-amount').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+
+  // Feedback lors de la soumission du formulaire
+  document.getElementById('depositForm')?.addEventListener('submit', function (e) {
+    const btn = document.getElementById('btnDeposit');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Traitement...';
+  });
+</script>

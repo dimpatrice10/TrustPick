@@ -49,12 +49,12 @@ try {
     $cau = $auth->generateCAU('user');
     $my_referral_code = $auth->generateReferralCode();
 
-    // Créer l'utilisateur
+    // Créer l'utilisateur - Bonus de démarrage 1000 FCFA
     $stmt = $pdo->prepare('
         INSERT INTO users (cau, name, phone, role, balance, referral_code, referred_by, is_active, created_at) 
         VALUES (?, ?, ?, ?, ?, ?, ?, TRUE, NOW())
     ');
-    $initialBalance = $referrer_id ? 5000 : 5000; // Bonus de démarrage
+    $initialBalance = 1000; // Bonus de démarrage pour tous
     $stmt->execute([$cau, $name, $phone, 'user', $initialBalance, $my_referral_code, $referrer_id]);
     $uid = $pdo->lastInsertId();
 
@@ -62,33 +62,52 @@ try {
     $pdo->prepare('
         INSERT INTO transactions (user_id, type, amount, description, created_at)
         VALUES (?, ?, ?, ?, NOW())
-    ')->execute([$uid, 'reward', $initialBalance, 'Crédit de bienvenue']);
+    ')->execute([$uid, 'bonus', $initialBalance, 'Crédit de bienvenue']);
 
-    // Si parrainage, récompenser aussi le parrain
+    // Si parrainage, vérifier si le parrain peut recevoir la récompense
     if ($referrer_id) {
+        require_once __DIR__ . '/../includes/task_manager.php';
+
+        // Vérifier si le parrain a complété ses tâches obligatoires
+        $canReward = TaskManager::areAllMandatoryTasksComplete($referrer_id, $pdo);
+        $referralBonus = 1000; // Bonus parrainage = 1000 FCFA
+
         // Enregistrer le parrainage
         $pdo->prepare('
             INSERT INTO referrals (referrer_id, referred_id, reward_amount, is_rewarded, created_at, rewarded_at)
-            VALUES (?, ?, 5000, TRUE, NOW(), NOW())
-        ')->execute([$referrer_id, $uid]);
+            VALUES (?, ?, ?, ?, NOW(), ?)
+        ')->execute([$referrer_id, $uid, $referralBonus, $canReward ? 1 : 0, $canReward ? date('Y-m-d H:i:s') : null]);
 
-        // Récompenser le parrain: +5 000 FCFA
-        $pdo->prepare('UPDATE users SET balance = balance + 5000 WHERE id = ?')->execute([$referrer_id]);
-        $pdo->prepare('
-            INSERT INTO transactions (user_id, type, amount, description, created_at)
-            VALUES (?, ?, ?, ?, NOW())
-        ')->execute([$referrer_id, 'reward', 5000, 'Bonus parrainage - Nouvel utilisateur inscrit']);
+        if ($canReward) {
+            // Récompenser le parrain: +1000 FCFA
+            $pdo->prepare('UPDATE users SET balance = balance + ? WHERE id = ?')->execute([$referralBonus, $referrer_id]);
+            $pdo->prepare('
+                INSERT INTO transactions (user_id, type, amount, description, created_at)
+                VALUES (?, ?, ?, ?, NOW())
+            ')->execute([$referrer_id, 'referral', $referralBonus, 'Bonus parrainage - Nouvel utilisateur inscrit']);
 
-        // Notification parrain
-        $pdo->prepare('
-            INSERT INTO notifications (user_id, type, title, message, created_at)
-            VALUES (?, ?, ?, ?, NOW())
-        ')->execute([
-                    $referrer_id,
-                    'success',
-                    '🎁 Nouveau parrainage !',
-                    "Vous avez gagné " . formatFCFA(5000) . " grâce au parrainage de $name !"
-                ]);
+            // Notification parrain - récompense reçue
+            $pdo->prepare('
+                INSERT INTO notifications (user_id, type, title, message, created_at)
+                VALUES (?, ?, ?, ?, NOW())
+            ')->execute([
+                        $referrer_id,
+                        'referral',
+                        'Nouveau parrainage !',
+                        "Vous avez gagné " . formatFCFA($referralBonus) . " grâce au parrainage de $name !"
+                    ]);
+        } else {
+            // Notification parrain - pas de récompense
+            $pdo->prepare('
+                INSERT INTO notifications (user_id, type, title, message, created_at)
+                VALUES (?, ?, ?, ?, NOW())
+            ')->execute([
+                        $referrer_id,
+                        'system',
+                        'Parrainage enregistré',
+                        "Parrainage de $name enregistré, mais aucune récompense car vos tâches obligatoires ne sont pas terminées."
+                    ]);
+        }
     }
 
     // Notification de bienvenue
@@ -97,8 +116,8 @@ try {
         VALUES (?, ?, ?, ?, NOW())
     ')->execute([
                 $uid,
-                'success',
-                '🎉 Bienvenue sur TrustPick !',
+                'system',
+                'Bienvenue sur TrustPick !',
                 "Votre code d'accès (CAU) est $cau. Vous commencez avec " . formatFCFA($initialBalance) . " !"
             ]);
 
@@ -108,7 +127,9 @@ try {
     $_SESSION['user_id'] = $uid;
     $_SESSION['user_name'] = $name;
     $_SESSION['user_role'] = 'user';
-    $_SESSION['user_cau'] = $cau;
+    $_SESSION['cau'] = $cau;
+    $_SESSION['balance'] = $initialBalance;
+    $_SESSION['referral_code'] = $my_referral_code;
 
     addToast('success', "Bienvenue $name ! Votre CAU est : <strong>$cau</strong>. Conservez-le précieusement.");
     redirect(url('index.php?page=user_dashboard'));

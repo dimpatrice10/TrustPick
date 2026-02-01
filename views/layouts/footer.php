@@ -15,6 +15,18 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="<?= url('assets/js/app.js') ?>"></script>
 <script src="<?= url('assets/js/ui-enhancements.js') ?>"></script>
+<script src="<?= url('assets/js/likes.js') ?>"></script>
+
+<!-- PWA Service Worker Registration -->
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('<?= url('service-worker.js') ?>')
+        .then(reg => console.log('Service Worker enregistré:', reg.scope))
+        .catch(err => console.log('Service Worker erreur:', err));
+    });
+  }
+</script>
 </body>
 
 </html>

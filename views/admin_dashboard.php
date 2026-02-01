@@ -154,6 +154,25 @@ $maxRatingCount = max($ratingDistribution) ?: 1;
     </div>
   </div>
 
+  <!-- Génération en masse de produits -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card border-0 shadow-sm bg-primary bg-opacity-10">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+              <h5 class="mb-1"><i class="bi bi-magic me-2"></i>Génération Automatique de Produits</h5>
+              <p class="text-muted mb-0 small">Créez plusieurs produits en un clic pour peupler votre catalogue</p>
+            </div>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#generateProductsModal">
+              <i class="bi bi-plus-circle me-1"></i>Générer des Produits
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="row">
     <!-- Produits récents -->
     <div class="col-lg-8 mb-4">
@@ -271,3 +290,81 @@ $maxRatingCount = max($ratingDistribution) ?: 1;
     </div>
   </div>
 </main>
+
+<!-- Modal Génération de Produits -->
+<div class="modal fade" id="generateProductsModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title"><i class="bi bi-magic me-2"></i>Générer des Produits</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <form id="generateProductsForm" action="<?= url('actions/company_generate_products.php') ?>" method="POST">
+        <div class="modal-body">
+          <div class="alert alert-info small">
+            <i class="bi bi-info-circle me-1"></i>
+            Générez automatiquement des produits avec des noms réalistes pour votre catalogue.
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Nombre de produits à générer</label>
+            <select name="count" class="form-select" required>
+              <option value="5">5 produits</option>
+              <option value="10" selected>10 produits</option>
+              <option value="20">20 produits</option>
+              <option value="30">30 produits</option>
+              <option value="50">50 produits (max)</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Catégorie (optionnel)</label>
+            <select name="category_id" class="form-select">
+              <option value="">Toutes les catégories (aléatoire)</option>
+              <?php
+              $categories = $pdo->query('SELECT id, name FROM categories ORDER BY name')->fetchAll();
+              foreach ($categories as $cat):
+                ?>
+                <option value="<?= $cat['id'] ?>"><?= htmlspecialchars($cat['name']) ?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Fourchette de prix</label>
+            <div class="row g-2">
+              <div class="col-6">
+                <div class="input-group">
+                  <span class="input-group-text">Min</span>
+                  <input type="number" name="price_min" class="form-control" value="1000" min="100">
+                  <span class="input-group-text">FCFA</span>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="input-group">
+                  <span class="input-group-text">Max</span>
+                  <input type="number" name="price_max" class="form-control" value="50000" min="100">
+                  <span class="input-group-text">FCFA</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+          <button type="submit" class="btn btn-primary" id="btnGenerateProducts">
+            <i class="bi bi-magic me-1"></i>Générer
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.getElementById('generateProductsForm')?.addEventListener('submit', function (e) {
+    const btn = document.getElementById('btnGenerateProducts');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Génération...';
+  });
+</script>

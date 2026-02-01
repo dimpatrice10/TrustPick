@@ -18,7 +18,16 @@ $toasts = getToasts();
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#0066cc">
+  <meta name="description" content="TrustPick - Gagnez de l'argent en laissant des avis sur vos produits préférés">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="TrustPick">
   <title>TrustPick — Plateforme de recommandation des produits</title>
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="<?= url('manifest.json') ?>">
+  <link rel="apple-touch-icon" href="<?= url('assets/img/icon-192.png') ?>">
+
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
     href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap"

@@ -1,24 +1,39 @@
 <IfModule mod_rewrite.c>
   RewriteEngine On
-  RewriteBase /
-
-  # PRIORITE 1: Exclure les fichiers PWA (Service Worker, Manifest)
-  RewriteRule ^pwa-manifest\.json$ - [L]
-  RewriteRule ^pwa-worker\.js$ - [L]
-  RewriteRule ^service-worker\.js$ - [L]
+  
+  # IMPORTANT: Exclure complètement le dossier pwa des redirections
+  RewriteRule ^pwa/ - [L]
+  
+  # Exclure les fichiers PWA de la racine
+  RewriteRule ^pwa-.*\.(js|json)$ - [L]
+  RewriteRule ^service-worker\.js$ - [L] 
   RewriteRule ^manifest\.json$ - [L]
   RewriteRule ^offline\.html$ - [L]
 
-  # PRIORITE 2: Exclure le dossier pwa/ dans public
-  RewriteRule ^public/pwa/ - [L]
+# Route requests to /assets/... to the local PHP proxy
 
-  # PRIORITE 3: Exclure les dossiers d'assets
-  RewriteRule ^(assets|fonts|img|images|uploads|css|js)/ - [L]
+RewriteRule ^assets/(.\*)$ assets/index.php?f=$1 [L,QSA]
 
-  # Ne pas toucher aux fichiers et dossiers existants
-  RewriteCond %{REQUEST_FILENAME} !-f
-  RewriteCond %{REQUEST_FILENAME} !-d
+# Pas de fallback ici - le .htaccess racine gère le routing
 
-  # Rediriger toutes les autres requêtes vers index.php
-  RewriteRule ^(.*)$ index.php [QSA,L]
+</IfModule>
+
+<IfModule mod_headers.c>
+  # Headers pour fichiers JavaScript
+  <FilesMatch "\.(js)$">
+    Header set Service-Worker-Allowed "/"
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+    Header set Content-Type "application/javascript"
+  </FilesMatch>
+  
+  # Headers pour fichiers JSON (manifest)
+  <FilesMatch "\.json$">
+    Header set Cache-Control "public, max-age=86400"
+    Header set Content-Type "application/manifest+json"
+  </FilesMatch>
+  
+  # Headers pour page offline
+  <FilesMatch "offline\.html$">
+    Header set Cache-Control "public, max-age=3600"
+  </FilesMatch>
 </IfModule>

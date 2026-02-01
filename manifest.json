@@ -1,0 +1,29 @@
+{
+  "name": "TrustPick",
+  "short_name": "TrustPick",
+  "description": "Plateforme d'avis et récompenses",
+  "start_url": "/",
+  "id": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0066cc",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/assets/img/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/assets/img/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["finance", "shopping"],
+  "lang": "fr-FR",
+  "scope": "/",
+  "prefer_related_applications": false
+}

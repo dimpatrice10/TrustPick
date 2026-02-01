@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>🔧 Test PWA Anti-Redirect</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+        background: #f5f5f5;
+      }
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+      }
+      .test {
+        margin: 15px 0;
+        padding: 15px;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+      }
+      .success {
+        background: #d4edda;
+        border-color: #28a745;
+      }
+      .error {
+        background: #f8d7da;
+        border-color: #dc3545;
+      }
+      .loading {
+        background: #d1ecf1;
+        border-color: #17a2b8;
+      }
+      .warning {
+        background: #fff3cd;
+        border-color: #ffc107;
+      }
+      button {
+        padding: 10px 20px;
+        margin: 5px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #0056b3;
+      }
+      pre {
+        background: #f8f9fa;
+        padding: 10px;
+        border-radius: 4px;
+        overflow-x: auto;
+        font-size: 12px;
+      }
+      .status {
+        font-weight: bold;
+        margin-top: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🔧 Test PWA Anti-Redirect TrustPick</h1>
+      <p>
+        <strong>But :</strong> Tester les fichiers PWA dans le dossier <code>/pwa/</code> pour éviter les redirections.
+      </p>
+
+      <div id="direct-test" class="test loading">
+        <h3>🌐 Test Accès Direct</h3>
+        <p>Vérification que les fichiers PWA sont accessibles sans redirection</p>
+        <div class="status" id="direct-status">Test en cours...</div>
+        <pre id="direct-details"></pre>
+      </div>
+
+      <div id="manifest-test" class="test loading">
+        <h3>📄 Test Manifest /pwa/manifest.json</h3>
+        <div class="status" id="manifest-status">Test en cours...</div>
+        <pre id="manifest-details"></pre>
+      </div>
+
+      <div id="sw-test" class="test loading">
+        <h3>⚙️ Test Service Worker /pwa/sw.js</h3>
+        <div class="status" id="sw-status">Test en cours...</div>
+        <pre id="sw-details"></pre>
+      </div>
+
+      <div id="install-test" class="test">
+        <h3>📲 Test Installation PWA</h3>
+        <button onclick="testInstallation()">Forcer Test Installation</button>
+        <div class="status" id="install-status">Prêt à tester</div>
+      </div>
+
+      <div class="test">
+        <h3>🔗 Liens de Test Direct</h3>
+        <p>Testez manuellement ces URLs :</p>
+        <ul>
+          <li><a href="/pwa/manifest.json" target="_blank">/pwa/manifest.json</a></li>
+          <li><a href="/pwa/sw.js" target="_blank">/pwa/sw.js</a></li>
+          <li><a href="/pwa-manifest.json" target="_blank">/pwa-manifest.json</a> (copie)</li>
+          <li><a href="/pwa-worker.js" target="_blank">/pwa-worker.js</a> (copie)</li>
+        </ul>
+      </div>
+    </div>
+
+    <script>
+      // Test d'accès direct aux fichiers
+      async function testDirectAccess() {
+        const tests = [
+          { url: '/pwa/manifest.json', name: 'Manifest PWA' },
+          { url: '/pwa/sw.js', name: 'Service Worker PWA' },
+          { url: '/pwa-manifest.json', name: 'Manifest Copie' },
+          { url: '/pwa-worker.js', name: 'Service Worker Copie' }
+        ];
+
+        let results = [];
+
+        for (const test of tests) {
+          try {
+            const response = await fetch(test.url);
+            const contentType = response.headers.get('content-type') || '';
+            const status = response.status;
+            const isRedirect = response.redirected;
+
+            results.push({
+              name: test.name,
+              url: test.url,
+              status: status,
+              contentType: contentType,
+              redirected: isRedirect,
+              success: status === 200 && !isRedirect
+            });
+          } catch (error) {
+            results.push({
+              name: test.name,
+              url: test.url,
+              error: error.message,
+              success: false
+            });
+          }
+        }
+
+        const allGood = results.every(r => r.success);
+        const element = document.getElementById('direct-test');
+        element.className = 'test ' + (allGood ? 'success' : 'error');
+
+        document.getElementById('direct-status').textContent = allGood
+          ? '✅ Tous les fichiers accessibles sans redirection'
+          : '❌ Certains fichiers ont des problèmes';
+
+        document.getElementById('direct-details').textContent = results
+          .map(r => `${r.name}: ${r.success ? '✅' : '❌'} ${r.status || r.error} ${r.redirected ? '(REDIRIGÉ)' : ''}`)
+          .join('\n');
+      }
+
+      // Test du manifest
+      async function testManifest() {
+        try {
+          const response = await fetch('/pwa/manifest.json');
+          if (response.redirected) {
+            throw new Error('Manifest redirigé ! URL finale: ' + response.url);
+          }
+
+          const manifest = await response.json();
+
+          document.getElementById('manifest-status').textContent = `✅ Manifest OK: ${manifest.name}`;
+          document.getElementById('manifest-test').className = 'test success';
+          document.getElementById('manifest-details').textContent = JSON.stringify(manifest, null, 2);
+        } catch (error) {
+          document.getElementById('manifest-status').textContent = `❌ Erreur: ${error.message}`;
+          document.getElementById('manifest-test').className = 'test error';
+          document.getElementById('manifest-details').textContent = error.stack || error.message;
+        }
+      }
+
+      // Test du service worker
+      async function testServiceWorker() {
+        try {
+          if ('serviceWorker' in navigator) {
+            // Tester d'abord l'accès direct
+            const response = await fetch('/pwa/sw.js');
+            if (response.redirected) {
+              throw new Error('Service Worker redirigé ! URL finale: ' + response.url);
+            }
+
+            // Puis tenter l'enregistrement
+            const registration = await navigator.serviceWorker.register('/pwa/sw.js');
+
+            document.getElementById('sw-status').textContent = `✅ Service Worker OK: ${registration.scope}`;
+            document.getElementById('sw-test').className = 'test success';
+            document.getElementById('sw-details').textContent =
+              `Scope: ${registration.scope}\nState: ${registration.active?.state || 'installing'}`;
+          } else {
+            throw new Error('Service Worker non supporté par ce navigateur');
+          }
+        } catch (error) {
+          document.getElementById('sw-status').textContent = `❌ Erreur: ${error.message}`;
+          document.getElementById('sw-test').className = 'test error';
+          document.getElementById('sw-details').textContent = error.stack || error.message;
+        }
+      }
+
+      // Test d'installation
+      let deferredPrompt;
+
+      window.addEventListener('beforeinstallprompt', e => {
+        e.preventDefault();
+        deferredPrompt = e;
+        document.getElementById('install-status').textContent = '✅ Installation PWA disponible !';
+      });
+
+      async function testInstallation() {
+        if (deferredPrompt) {
+          try {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            document.getElementById('install-status').textContent = `Résultat installation: ${outcome}`;
+          } catch (error) {
+            document.getElementById('install-status').textContent = `Erreur installation: ${error.message}`;
+          }
+        } else {
+          document.getElementById('install-status').textContent =
+            "⚠️ Pas de prompt d'installation (peut être déjà installé, ou navigateur iOS)";
+        }
+      }
+
+      // Lancer les tests au chargement
+      window.addEventListener('load', async () => {
+        console.log('🔧 Démarrage des tests PWA anti-redirect');
+
+        await testDirectAccess();
+        await testManifest();
+        await testServiceWorker();
+      });
+    </script>
+  </body>
+</html>

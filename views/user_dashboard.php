@@ -58,7 +58,7 @@ try {
 // Notifications non lues
 $unreadNotifications = 0;
 try {
-  $notifStmt = $pdo->prepare('SELECT COUNT(*) FROM notifications WHERE user_id = ? AND is_read = 0');
+  $notifStmt = $pdo->prepare('SELECT COUNT(*) FROM notifications WHERE user_id = ? AND is_read = FALSE');
   $notifStmt->execute([$uid]);
   $unreadNotifications = intval($notifStmt->fetchColumn());
 } catch (Exception $e) {
@@ -83,7 +83,7 @@ try {
         SELECT COALESCE(SUM(amount), 0) 
         FROM transactions 
         WHERE user_id = ? AND type IN ("reward", "referral") 
-        AND created_at >= DATE_FORMAT(NOW(), "%Y-%m-01")
+        AND created_at >= DATE_TRUNC('month', NOW())
     ');
   $monthStmt->execute([$uid]);
   $monthGains = floatval($monthStmt->fetchColumn());

@@ -30,7 +30,7 @@ $balance = floatval($balStmt->fetchColumn());
 $dailyTasksStatus = TaskManager::getDailyTasksStatus($uid, $pdo);
 
 // Récupérer les définitions de tâches (pour compatibilité)
-$tasksDefStmt = $pdo->query('SELECT * FROM tasks_definitions WHERE is_active = 1 ORDER BY id');
+$tasksDefStmt = $pdo->query('SELECT * FROM tasks_definitions WHERE is_active = TRUE ORDER BY id');
 $tasksDef = $tasksDefStmt->fetchAll();
 
 // Mapper par task_code pour référence facile

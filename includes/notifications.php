@@ -52,12 +52,12 @@ class NotificationSystem
                     link,
                     is_read,
                     created_at,
-                    DATE_FORMAT(created_at, '%d/%m/%Y %H:%i') as formatted_date,
+                    TO_CHAR(created_at, 'DD/MM/YYYY HH24:MI') as formatted_date,
                     CASE 
-                        WHEN created_at >= DATE_SUB(NOW(), INTERVAL 1 HOUR) THEN 'Il y a quelques minutes'
-                        WHEN created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR) THEN CONCAT('Il y a ', TIMESTAMPDIFF(HOUR, created_at, NOW()), 'h')
-                        WHEN created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) THEN CONCAT('Il y a ', TIMESTAMPDIFF(DAY, created_at, NOW()), 'j')
-                        ELSE formatted_date
+                        WHEN created_at >= NOW() - INTERVAL '1 hour' THEN 'Il y a quelques minutes'
+                        WHEN created_at >= NOW() - INTERVAL '24 hours' THEN CONCAT('Il y a ', EXTRACT(EPOCH FROM (NOW() - created_at))::int / 3600, 'h')
+                        WHEN created_at >= NOW() - INTERVAL '7 days' THEN CONCAT('Il y a ', EXTRACT(EPOCH FROM (NOW() - created_at))::int / 86400, 'j')
+                        ELSE TO_CHAR(created_at, 'DD/MM/YYYY HH24:MI')
                     END as relative_time
                 FROM notifications
                 WHERE user_id = ?
@@ -217,7 +217,7 @@ class NotificationSystem
                 $stmt = $this->db->prepare("
                     SELECT COUNT(*) 
                     FROM notifications 
-                    WHERE user_id = ? AND DATE(created_at) = CURDATE()
+                    WHERE user_id = ? AND DATE(created_at) = CURRENT_DATE
                 ");
                 $stmt->execute([$user['id']]);
                 $todayCount = $stmt->fetchColumn();
@@ -281,7 +281,7 @@ class NotificationSystem
                     FROM user_tasks ut 
                     WHERE ut.user_id = ? 
                     AND ut.task_id = td.id 
-                    AND DATE(ut.completed_at) = CURDATE()
+                    AND DATE(ut.completed_at) = CURRENT_DATE
                 )
             ");
             $stmt->execute([$userId]);
@@ -330,7 +330,7 @@ class NotificationSystem
                 SELECT id 
                 FROM users 
                 WHERE is_active = TRUE AND role = 'user'
-                ORDER BY RAND()
+                ORDER BY RANDOM()
                 LIMIT 100
             ");
             $users = $stmt->fetchAll(PDO::FETCH_COLUMN);

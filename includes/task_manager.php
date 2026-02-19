@@ -60,7 +60,7 @@ class TaskManager
         $stmt = $pdo->prepare('
             SELECT ut.id FROM user_tasks ut
             JOIN tasks_definitions td ON td.id = ut.task_id
-            WHERE ut.user_id = ? AND td.task_code = ? AND DATE(ut.completed_at) = CURDATE()
+            WHERE ut.user_id = ? AND td.task_code = ? AND DATE(ut.completed_at) = CURRENT_DATE
         ');
         $stmt->execute([$user_id, $task_code]);
         return $stmt->fetch() !== false;

@@ -50,7 +50,7 @@ try {
     // Vérifier si l'utilisateur a déjà recommandé ce produit aujourd'hui
     $checkStmt = $pdo->prepare('
         SELECT id FROM recommendations 
-        WHERE recommender_id = ? AND product_id = ? AND DATE(created_at) = CURDATE()
+        WHERE recommender_id = ? AND product_id = ? AND DATE(created_at) = CURRENT_DATE
     ');
     $checkStmt->execute([$user_id, $product_id]);
 

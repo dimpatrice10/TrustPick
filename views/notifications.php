@@ -19,7 +19,7 @@ $uid = intval($_SESSION['user_id']);
 
 // Marquer comme lues si demandé
 if (isset($_GET['mark_read']) && $_GET['mark_read'] === 'all') {
-    $pdo->prepare('UPDATE notifications SET is_read = 1 WHERE user_id = ?')->execute([$uid]);
+    $pdo->prepare('UPDATE notifications SET is_read = TRUE WHERE user_id = ?')->execute([$uid]);
     if (headers_sent()) {
         echo '<script>window.location.href="' . url('index.php?page=notifications') . '";</script>';
         echo '<noscript><meta http-equiv="refresh" content="0;url=' . url('index.php?page=notifications') . '"></noscript>';
@@ -48,7 +48,7 @@ $notifStmt->execute([$uid]);
 $notifications = $notifStmt->fetchAll();
 
 // Compteur non lues
-$unreadStmt = $pdo->prepare('SELECT COUNT(*) FROM notifications WHERE user_id = ? AND is_read = 0');
+$unreadStmt = $pdo->prepare('SELECT COUNT(*) FROM notifications WHERE user_id = ? AND is_read = FALSE');
 $unreadStmt->execute([$uid]);
 $unreadCount = intval($unreadStmt->fetchColumn());
 
@@ -89,18 +89,18 @@ $typeColors = [
                     <h1 class="h2 mb-1"><i class="bi bi-bell"></i> Notifications</h1>
                     <p class="text-muted mb-0">
                         <?php if ($unreadCount > 0): ?>
-                        <span class="badge bg-danger"><?= $unreadCount ?></span> non
-                        lue<?= $unreadCount > 1 ? 's' : '' ?>
+                            <span class="badge bg-danger"><?= $unreadCount ?></span> non
+                            lue<?= $unreadCount > 1 ? 's' : '' ?>
                         <?php else: ?>
-                        Toutes les notifications sont lues
+                            Toutes les notifications sont lues
                         <?php endif; ?>
                     </p>
                 </div>
                 <?php if ($unreadCount > 0): ?>
-                <a href="<?= url('index.php?page=notifications&mark_read=all') ?>"
-                    class="btn btn-outline-primary btn-sm">
-                    <i class="bi bi-check-all"></i> Tout marquer comme lu
-                </a>
+                    <a href="<?= url('index.php?page=notifications&mark_read=all') ?>"
+                        class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-check-all"></i> Tout marquer comme lu
+                    </a>
                 <?php endif; ?>
             </div>
         </div>
@@ -112,66 +112,66 @@ $typeColors = [
             <div class="card border-0 shadow-sm">
                 <div class="card-body p-0">
                     <?php if (empty($notifications)): ?>
-                    <div class="text-center py-5">
-                        <div class="display-1 mb-3 text-muted"><i class="bi bi-bell-slash"></i></div>
-                        <h5 class="text-muted">Aucune notification</h5>
-                        <p class="text-muted">Vos notifications apparaîtront ici</p>
-                    </div>
+                        <div class="text-center py-5">
+                            <div class="display-1 mb-3 text-muted"><i class="bi bi-bell-slash"></i></div>
+                            <h5 class="text-muted">Aucune notification</h5>
+                            <p class="text-muted">Vos notifications apparaîtront ici</p>
+                        </div>
                     <?php else: ?>
-                    <div class="list-group list-group-flush">
-                        <?php foreach ($notifications as $notif):
+                        <div class="list-group list-group-flush">
+                            <?php foreach ($notifications as $notif):
                                 $type = $notif['type'] ?? 'system';
                                 $icon = $typeIcons[$type] ?? 'bi-bell-fill';
                                 $color = $typeColors[$type] ?? 'secondary';
                                 $isUnread = empty($notif['is_read']);
                                 ?>
-                        <div
-                            class="list-group-item py-3 <?= $isUnread ? 'bg-light border-start border-primary border-3' : '' ?>">
-                            <div class="d-flex gap-3">
-                                <div class="notification-icon flex-shrink-0 bg-<?= $color ?> bg-opacity-10 text-<?= $color ?>"
-                                    style="width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;">
-                                    <i class="bi <?= $icon ?>"></i>
-                                </div>
-                                <div class="flex-grow-1">
-                                    <div class="d-flex justify-content-between align-items-start">
-                                        <h6 class="mb-1 <?= $isUnread ? 'fw-bold' : '' ?>">
-                                            <?= htmlspecialchars($notif['title']) ?>
-                                            <?php if ($isUnread): ?>
-                                            <span class="badge bg-primary ms-2">Nouveau</span>
+                                <div
+                                    class="list-group-item py-3 <?= $isUnread ? 'bg-light border-start border-primary border-3' : '' ?>">
+                                    <div class="d-flex gap-3">
+                                        <div class="notification-icon flex-shrink-0 bg-<?= $color ?> bg-opacity-10 text-<?= $color ?>"
+                                            style="width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;">
+                                            <i class="bi <?= $icon ?>"></i>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <h6 class="mb-1 <?= $isUnread ? 'fw-bold' : '' ?>">
+                                                    <?= htmlspecialchars($notif['title']) ?>
+                                                    <?php if ($isUnread): ?>
+                                                        <span class="badge bg-primary ms-2">Nouveau</span>
+                                                    <?php endif; ?>
+                                                </h6>
+                                                <small class="text-muted">
+                                                    <?= timeAgo($notif['created_at']) ?>
+                                                </small>
+                                            </div>
+                                            <p class="mb-0 text-muted"><?= htmlspecialchars($notif['message']) ?></p>
+                                            <?php if (!empty($notif['link'])): ?>
+                                                <a href="<?= url($notif['link']) ?>" class="btn btn-link btn-sm p-0 mt-1">
+                                                    Voir détails →
+                                                </a>
                                             <?php endif; ?>
-                                        </h6>
-                                        <small class="text-muted">
-                                            <?= timeAgo($notif['created_at']) ?>
-                                        </small>
+                                        </div>
                                     </div>
-                                    <p class="mb-0 text-muted"><?= htmlspecialchars($notif['message']) ?></p>
-                                    <?php if (!empty($notif['link'])): ?>
-                                    <a href="<?= url($notif['link']) ?>" class="btn btn-link btn-sm p-0 mt-1">
-                                        Voir détails →
-                                    </a>
-                                    <?php endif; ?>
                                 </div>
-                            </div>
+                            <?php endforeach; ?>
                         </div>
-                        <?php endforeach; ?>
-                    </div>
 
-                    <!-- Pagination -->
-                    <?php if ($totalPages > 1): ?>
-                    <div class="card-footer bg-white py-3">
-                        <nav>
-                            <ul class="pagination pagination-sm justify-content-center mb-0">
-                                <?php for ($i = 1; $i <= $totalPages; $i++): ?>
-                                <li class="page-item <?= $i === $page ? 'active' : '' ?>">
-                                    <a class="page-link" href="<?= url('index.php?page=notifications&p=' . $i) ?>">
-                                        <?= $i ?>
-                                    </a>
-                                </li>
-                                <?php endfor; ?>
-                            </ul>
-                        </nav>
-                    </div>
-                    <?php endif; ?>
+                        <!-- Pagination -->
+                        <?php if ($totalPages > 1): ?>
+                            <div class="card-footer bg-white py-3">
+                                <nav>
+                                    <ul class="pagination pagination-sm justify-content-center mb-0">
+                                        <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                                            <li class="page-item <?= $i === $page ? 'active' : '' ?>">
+                                                <a class="page-link" href="<?= url('index.php?page=notifications&p=' . $i) ?>">
+                                                    <?= $i ?>
+                                                </a>
+                                            </li>
+                                        <?php endfor; ?>
+                                    </ul>
+                                </nav>
+                            </div>
+                        <?php endif; ?>
                     <?php endif; ?>
                 </div>
             </div>

@@ -156,7 +156,7 @@ class SmartPagination
                 u.cau as user_cau,
                 p.title as product_title,
                 p.id as product_id,
-                DATE_FORMAT(r.created_at, '%d/%m/%Y') as review_date
+                TO_CHAR(r.created_at, 'DD/MM/YYYY') as review_date
             FROM reviews r
             JOIN users u ON r.user_id = u.id
             JOIN products p ON r.product_id = p.id
@@ -198,7 +198,7 @@ class SmartPagination
                 message,
                 link,
                 is_read,
-                DATE_FORMAT(created_at, '%d/%m/%Y %H:%i') as formatted_date
+                TO_CHAR(created_at, 'DD/MM/YYYY HH24:MI') as formatted_date
             FROM notifications
             WHERE user_id = ?
         ";
@@ -255,8 +255,8 @@ class SmartPagination
                 u.balance,
                 u.is_active,
                 c.name as company_name,
-                DATE_FORMAT(u.created_at, '%d/%m/%Y') as join_date,
-                DATE_FORMAT(u.last_login, '%d/%m/%Y %H:%i') as last_login_formatted
+                TO_CHAR(u.created_at, 'DD/MM/YYYY') as join_date,
+                TO_CHAR(u.last_login, 'DD/MM/YYYY HH24:MI') as last_login_formatted
             FROM users u
             LEFT JOIN companies c ON u.company_id = c.id
             WHERE 1=1
@@ -304,7 +304,7 @@ class SmartPagination
                 amount,
                 description,
                 balance_after,
-                DATE_FORMAT(created_at, '%d/%m/%Y %H:%i') as transaction_date
+                TO_CHAR(created_at, 'DD/MM/YYYY HH24:MI') as transaction_date
             FROM transactions
             WHERE user_id = ?
             ORDER BY created_at DESC

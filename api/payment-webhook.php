@@ -69,21 +69,13 @@ try {
 
     logWebhook('Webhook décodé:', $webhookData);
 
-    // Validation de la signature MeSomb (optionnel mais recommandé)
+    // Validation du webhook MeSomb
+    // MeSomb ne fournit pas de webhook_secret séparé.
+    // La validation se fait en vérifiant la transaction via l'API MeSomb.
     $config = require __DIR__ . '/../includes/config.php';
-    $webhookSecret = $config['payment']['webhook_secret'] ?? null;
 
-    if ($webhookSecret) {
-        $receivedSignature = $_SERVER['HTTP_X_MESOMB_SIGNATURE'] ?? '';
-        $computedSignature = hash_hmac('sha256', $rawInput, $webhookSecret);
-
-        if (!hash_equals($computedSignature, $receivedSignature)) {
-            logWebhook('Erreur: Signature invalide');
-            http_response_code(403);
-            echo json_encode(['error' => 'Invalid signature']);
-            exit;
-        }
-    }
+    // Vérification basique: le webhook doit contenir une référence connue
+    // La confirmation définitive se fait via l'API MeSomb (dans processWebhook)
 
     // Extraire les informations essentielles
     $reference = $webhookData['reference'] ?? null;

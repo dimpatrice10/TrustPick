@@ -29,7 +29,7 @@ class TaskSystem
                              FROM user_tasks ut 
                              WHERE ut.user_id = ? 
                              AND ut.task_id = td.id 
-                             AND DATE(ut.completed_at) = CURDATE()) > 0
+                             AND DATE(ut.completed_at) = CURRENT_DATE) > 0
                         ELSE
                             (SELECT COUNT(*) 
                              FROM user_tasks ut 
@@ -89,7 +89,7 @@ class TaskSystem
                     FROM user_tasks 
                     WHERE user_id = ? 
                     AND task_id = ? 
-                    AND DATE(completed_at) = CURDATE()
+                    AND DATE(completed_at) = CURRENT_DATE
                 ");
             } else {
                 // Tâche unique: vérifier toute l'histoire
@@ -217,7 +217,7 @@ class TaskSystem
                     ut.*,
                     td.task_name,
                     td.task_code,
-                    DATE_FORMAT(ut.completed_at, '%d/%m/%Y %H:%i') as completed_date
+                    TO_CHAR(ut.completed_at, 'DD/MM/YYYY HH24:MI') as completed_date
                 FROM user_tasks ut
                 JOIN tasks_definitions td ON ut.task_id = td.id
                 WHERE ut.user_id = ?
@@ -259,7 +259,7 @@ class TaskSystem
             $stmt = $this->db->prepare("
                 SELECT COUNT(*) as today_tasks, SUM(reward_earned) as today_earned
                 FROM user_tasks
-                WHERE user_id = ? AND DATE(completed_at) = CURDATE()
+                WHERE user_id = ? AND DATE(completed_at) = CURRENT_DATE
             ");
             $stmt->execute([$userId]);
             $today = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -268,7 +268,7 @@ class TaskSystem
             $stmt = $this->db->prepare("
                 SELECT COUNT(*) as week_tasks, SUM(reward_earned) as week_earned
                 FROM user_tasks
-                WHERE user_id = ? AND YEARWEEK(completed_at) = YEARWEEK(NOW())
+                WHERE user_id = ? AND EXTRACT(WEEK FROM completed_at) = EXTRACT(WEEK FROM NOW()) AND EXTRACT(YEAR FROM completed_at) = EXTRACT(YEAR FROM NOW())
             ");
             $stmt->execute([$userId]);
             $week = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -347,7 +347,7 @@ class TaskSystem
                     FROM user_tasks ut 
                     WHERE ut.user_id = ? 
                     AND ut.task_id = td.id 
-                    AND DATE(ut.completed_at) = CURDATE()
+                    AND DATE(ut.completed_at) = CURRENT_DATE
                 )
                 ORDER BY td.reward_amount DESC
             ");

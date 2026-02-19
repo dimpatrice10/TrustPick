@@ -23,7 +23,7 @@ $balStmt->execute([$uid]);
 $balance = floatval($balStmt->fetchColumn() ?? 0);
 
 // Total retiré
-$wdStmt = $pdo->prepare('SELECT IFNULL(SUM(amount), 0) FROM withdrawals WHERE user_id = ?');
+$wdStmt = $pdo->prepare('SELECT COALESCE(SUM(amount), 0) FROM withdrawals WHERE user_id = ?');
 $wdStmt->execute([$uid]);
 $totalWithdrawn = floatval($wdStmt->fetchColumn());
 

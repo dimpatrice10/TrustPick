@@ -72,7 +72,7 @@ class ReferralSystem
                 SELECT COUNT(*) as active_referrals
                 FROM users
                 WHERE referred_by = ?
-                AND last_login >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+                AND last_login >= NOW() - INTERVAL '7 days'
             ");
             $stmt->execute([$userId]);
             $activeReferrals = $stmt->fetchColumn();
@@ -86,7 +86,7 @@ class ReferralSystem
                     r.reward_amount,
                     r.is_rewarded,
                     r.rewarded_at,
-                    DATE_FORMAT(u.created_at, '%d/%m/%Y') as join_date
+                    TO_CHAR(u.created_at, 'DD/MM/YYYY') as join_date
                 FROM users u
                 LEFT JOIN referrals r ON r.referred_id = u.id
                 WHERE u.referred_by = ?

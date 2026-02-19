@@ -58,4 +58,4 @@ gulpfile.tmp.*
 /html-demo
 /html-starter-demo
 
-includes/config.php
+# Note: includes/config.php is NOT ignored - it reads from env vars and is safe to commit

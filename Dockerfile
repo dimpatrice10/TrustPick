@@ -13,12 +13,8 @@ RUN docker-php-ext-install pdo pdo_pgsql pgsql curl
 # Activer mod_rewrite pour Apache
 RUN a2enmod rewrite headers
 
-# Configurer Apache pour écouter sur le port de Render ($PORT)
-RUN sed -i 's/80/${PORT}/g' /etc/apache2/sites-available/000-default.conf /etc/apache2/ports.conf
-
 # Configurer Apache pour autoriser les .htaccess (AllowOverride All)
 RUN sed -i '/<Directory \/var\/www\/html>/,/<\/Directory>/ s/AllowOverride None/AllowOverride All/' /etc/apache2/apache2.conf
-# Aussi pour /var/www/
 RUN sed -i '/<Directory \/var\/www\/>/,/<\/Directory>/ s/AllowOverride None/AllowOverride All/' /etc/apache2/apache2.conf
 
 # Configurer PHP pour la production
@@ -40,11 +36,11 @@ RUN mkdir -p /var/www/html/logs && chmod 755 /var/www/html/logs
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html
 
-# Exposer le port (Render utilise la variable PORT)
-EXPOSE ${PORT}
-
-# Variable d'environnement par défaut pour le port
+# Port par défaut (Render fournit $PORT dynamiquement)
 ENV PORT=10000
+EXPOSE 10000
 
-# Démarrer Apache
-CMD ["apache2-foreground"]
+# Script de démarrage : configure le port Apache dynamiquement puis lance Apache
+CMD sed -i "s/Listen 80/Listen ${PORT}/g" /etc/apache2/ports.conf \
+    && sed -i "s/<VirtualHost \*:80>/<VirtualHost *:${PORT}>/g" /etc/apache2/sites-available/000-default.conf \
+    && apache2-foreground

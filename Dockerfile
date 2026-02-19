@@ -40,7 +40,15 @@ RUN chown -R www-data:www-data /var/www/html \
 ENV PORT=10000
 EXPOSE 10000
 
-# Script de démarrage : configure le port Apache dynamiquement puis lance Apache
-CMD sed -i "s/Listen 80/Listen ${PORT}/g" /etc/apache2/ports.conf \
-    && sed -i "s/<VirtualHost \*:80>/<VirtualHost *:${PORT}>/g" /etc/apache2/sites-available/000-default.conf \
-    && apache2-foreground
+# Script de démarrage : configure le port + exporte les env vars pour Apache/PHP
+CMD /bin/bash -c '\
+    sed -i "s/Listen 80/Listen ${PORT}/g" /etc/apache2/ports.conf && \
+    sed -i "s/<VirtualHost \*:80>/<VirtualHost *:${PORT}>/g" /etc/apache2/sites-available/000-default.conf && \
+    # Exporter TOUTES les variables d environnement dans Apache envvars pour que PHP puisse y accéder
+    env >> /etc/apache2/envvars && \
+    # Aussi les passer via PassEnv dans la config Apache
+    echo "PassEnv DATABASE_URL" >> /etc/apache2/apache2.conf && \
+    echo "PassEnv PGHOST PGPORT PGDATABASE PGUSER PGPASSWORD" >> /etc/apache2/apache2.conf && \
+    echo "PassEnv MESOMB_APP_KEY MESOMB_ACCESS_KEY MESOMB_SECRET_KEY MESOMB_API_URL MESOMB_ENABLED" >> /etc/apache2/apache2.conf && \
+    echo "PassEnv ORANGE_ACCOUNT MTN_ACCOUNT" >> /etc/apache2/apache2.conf && \
+    apache2-foreground'

@@ -25,22 +25,37 @@ pre { background: #f4f4f4; padding: 10px; border-radius: 5px; overflow-x: auto; 
 
 echo "<h1>🔧 TrustPick V2 - Initialisation PostgreSQL</h1>";
 
+// Helper pour lire les env vars (Apache ne les passe pas toujours via getenv)
+function setup_env($name) {
+    $val = getenv($name);
+    if ($val !== false) return $val;
+    if (isset($_ENV[$name])) return $_ENV[$name];
+    if (isset($_SERVER[$name])) return $_SERVER[$name];
+    return null;
+}
+
 // Vérifier les variables d'environnement
 echo "<h2>1. Vérification de la configuration</h2>";
 
-$databaseUrl = getenv('DATABASE_URL');
+$databaseUrl = setup_env('DATABASE_URL');
 if ($databaseUrl) {
     echo "<p class='success'>✅ DATABASE_URL trouvée</p>";
     $parts = parse_url($databaseUrl);
     echo "<p class='info'>Host: {$parts['host']}, DB: " . ltrim($parts['path'], '/') . "</p>";
 } else {
-    $pgHost = getenv('PGHOST');
+    $pgHost = setup_env('PGHOST');
     if ($pgHost) {
         echo "<p class='success'>✅ Variables PG individuelles trouvées (PGHOST={$pgHost})</p>";
     } else {
         echo "<p class='error'>❌ Aucune variable de connexion trouvée !</p>";
         echo "<p>Configurez DATABASE_URL ou les variables PGHOST, PGDATABASE, etc.</p>";
-        exit;
+        // Afficher les env vars disponibles pour debug
+        echo "<h3>Debug - Variables disponibles:</h3><pre>";
+        echo "getenv('DATABASE_URL'): " . var_export(getenv('DATABASE_URL'), true) . "\n";
+        echo "\$_ENV keys: " . implode(', ', array_keys($_ENV ?: [])) . "\n";
+        echo "\$_SERVER['DATABASE_URL']: " . ($_SERVER['DATABASE_URL'] ?? 'non définie') . "\n";
+        echo "</pre>";
+        exit("</body></html>");
     }
 }
 
@@ -54,7 +69,7 @@ try {
     $port = $config['db_port'] ?? 5432;
     $dsn = "pgsql:host={$config['db_host']};port={$port};dbname={$config['db_name']}";
 
-    if (getenv('DATABASE_URL')) {
+    if (setup_env('DATABASE_URL')) {
         $dsn .= ";sslmode=require";
     }
 

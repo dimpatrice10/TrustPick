@@ -12,7 +12,10 @@ class Database
         $config = require __DIR__ . '/config.php';
         try {
             // Support PostgreSQL (Render) et MySQL (XAMPP local)
-            $driver = getenv('DATABASE_URL') || getenv('PGHOST') ? 'pgsql' : 'mysql';
+            // Utiliser tp_env() si disponible, sinon getenv() + $_ENV + $_SERVER
+            $hasDbUrl = getenv('DATABASE_URL') || ($_ENV['DATABASE_URL'] ?? '') || ($_SERVER['DATABASE_URL'] ?? '');
+            $hasPgHost = getenv('PGHOST') || ($_ENV['PGHOST'] ?? '') || ($_SERVER['PGHOST'] ?? '');
+            $driver = ($hasDbUrl || $hasPgHost) ? 'pgsql' : 'mysql';
 
             if ($driver === 'pgsql') {
                 $port = $config['db_port'] ?? 5432;
@@ -22,7 +25,8 @@ class Database
                     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                 ];
                 // Render PostgreSQL nécessite SSL
-                if (getenv('DATABASE_URL')) {
+                $hasDbUrl = getenv('DATABASE_URL') || ($_ENV['DATABASE_URL'] ?? '') || ($_SERVER['DATABASE_URL'] ?? '');
+                if ($hasDbUrl) {
                     $dsn .= ";sslmode=require";
                 }
             } else {

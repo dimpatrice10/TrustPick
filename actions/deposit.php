@@ -1,7 +1,7 @@
 <?php
 /**
  * TrustPick V2 - Action: Dépôt d'argent
- * Tâche obligatoire: dépôt minimum 5000 FCFA
+ * Paiement Mobile Money via MeSomb (Orange Money & MTN Mobile Money)
  */
 
 if (session_status() === PHP_SESSION_NONE) {
@@ -11,7 +11,7 @@ if (session_status() === PHP_SESSION_NONE) {
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/url.php';
 require_once __DIR__ . '/../includes/helpers.php';
-require_once __DIR__ . '/../includes/task_manager.php';
+require_once __DIR__ . '/../includes/payment.php';
 
 // Vérifier connexion
 if (empty($_SESSION['user_id'])) {
@@ -21,61 +21,51 @@ if (empty($_SESSION['user_id'])) {
 
 $user_id = intval($_SESSION['user_id']);
 $amount = intval($_POST['amount'] ?? 0);
-$payment_method = trim($_POST['method'] ?? $_POST['payment_method'] ?? 'mobile_money');
-$phone_number = trim($_POST['phone'] ?? $_POST['phone_number'] ?? '');
+$channel = strtoupper(trim($_POST['channel'] ?? 'ORANGE')); // ORANGE ou MTN
+$phone = trim($_POST['phone'] ?? '');
 
-$minDeposit = 5000; // Minimum 5000 FCFA
+// Validation
+if (empty($phone)) {
+    addToast('error', 'Veuillez fournir votre numéro de téléphone.');
+    redirect(url('index.php?page=wallet'));
+}
 
-if ($amount < $minDeposit) {
-    addToast('error', 'Le montant minimum de dépôt est de ' . formatFCFA($minDeposit) . '.');
+if (!in_array($channel, ['ORANGE', 'MTN'])) {
+    addToast('error', 'Opérateur de paiement invalide.');
     redirect(url('index.php?page=wallet'));
 }
 
 try {
-    $pdo = Database::getInstance()->getConnection();
-    $pdo->beginTransaction();
+    $paymentManager = new PaymentManager();
 
-    // Créditer le compte utilisateur
-    $pdo->prepare('UPDATE users SET balance = balance + ? WHERE id = ?')
-        ->execute([$amount, $user_id]);
+    // Initier le paiement via MeSomb
+    $result = $paymentManager->initiatePayment($user_id, $amount, $phone, $channel);
 
-    // Récupérer le nouveau solde
-    $balanceStmt = $pdo->prepare('SELECT balance FROM users WHERE id = ?');
-    $balanceStmt->execute([$user_id]);
-    $newBalance = $balanceStmt->fetchColumn();
+    if ($result['success']) {
+        // Stocker les infos en session pour la page d'instructions
+        $_SESSION['payment_reference'] = $result['reference'];
+        $_SESSION['payment_amount'] = $amount;
+        $_SESSION['payment_channel'] = strtolower($channel);
+        $_SESSION['payment_phone'] = $phone;
+        $_SESSION['payment_status'] = $result['status'] ?? 'pending';
 
-    // Enregistrer la transaction
-    $pdo->prepare('
-        INSERT INTO transactions (user_id, type, amount, description, reference_type, balance_after, created_at)
-        VALUES (?, "bonus", ?, ?, "deposit", ?, NOW())
-    ')->execute([$user_id, $amount, 'Dépôt via ' . $payment_method, $newBalance]);
-
-    // Vérifier si c'est le premier dépôt >= 5000 aujourd'hui (pour la tâche)
-    $checkTask = TaskManager::isTaskCompletedToday($user_id, 'deposit_5000', $pdo);
-
-    if (!$checkTask && $amount >= $minDeposit) {
-        // Compléter la tâche dépôt
-        TaskManager::completeTask($user_id, 'deposit_5000', $pdo);
-
-        // Notification
-        $pdo->prepare('
-            INSERT INTO notifications (user_id, type, title, message, created_at)
-            VALUES (?, "reward", "Tâche complétée", ?, NOW())
-        ')->execute([$user_id, 'Vous avez effectué un dépôt de ' . formatFCFA($amount) . '. Tâche quotidienne validée !']);
+        // Si le paiement nécessite USSD, rediriger vers les instructions
+        if (isset($result['requires_ussd']) && $result['requires_ussd'] === true) {
+            addToast('info', 'Veuillez suivre les instructions pour confirmer votre paiement.');
+            redirect(url('index.php?page=payment_instructions'));
+        } else {
+            // Paiement immédiat (rare avec MeSomb, mais possible)
+            addToast('success', 'Paiement de ' . formatFCFA($amount) . ' effectué avec succès !');
+            redirect(url('index.php?page=wallet'));
+        }
+    } else {
+        // Échec de l'initialisation
+        addToast('error', $result['message'] ?? 'Échec de l\'initialisation du paiement.');
+        redirect(url('index.php?page=wallet'));
     }
-
-    // Mettre à jour la session
-    $_SESSION['balance'] = $newBalance;
-
-    $pdo->commit();
-
-    addToast('success', 'Dépôt de ' . formatFCFA($amount) . ' effectué avec succès !');
 
 } catch (Exception $e) {
-    if (isset($pdo) && $pdo->inTransaction()) {
-        $pdo->rollBack();
-    }
+    error_log('Deposit Error: ' . $e->getMessage());
     addToast('error', 'Erreur lors du dépôt: ' . $e->getMessage());
+    redirect(url('index.php?page=wallet'));
 }
-
-redirect(url('index.php?page=wallet'));

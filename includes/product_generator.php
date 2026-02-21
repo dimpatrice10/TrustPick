@@ -250,44 +250,24 @@ class ProductGenerator
     }
 
     /**
-     * Obtenir une image pour le produit
-     * Utilise le même mapping que image_helper.php pour cohérence
+     * Obtenir une image pour le produit.
+     * Délègue à getProductImage() de image_helper.php qui utilise
+     * un hash composite (titre complet + ID) pour maximiser la diversité.
      */
     private function getProductImage($category, $productName)
     {
-        // Charger image_helper.php si pas déjà chargé
         if (!function_exists('getImageDatabase')) {
             require_once __DIR__ . '/image_helper.php';
         }
 
-        $title = normalizeText($productName);
-        $imageDb = getImageDatabase();
-
-        // Trier les clés par longueur décroissante (plus spécifique d'abord)
-        $keys = array_keys($imageDb);
-        usort($keys, function ($a, $b) {
-            return strlen($b) - strlen($a);
-        });
-
-        // Chercher correspondance dans le titre du produit
-        foreach ($keys as $keyword) {
-            if (str_contains($title, $keyword)) {
-                $images = $imageDb[$keyword];
-                return $images[array_rand($images)];
-            }
-        }
-
-        // Fallback par catégorie
-        $catNorm = normalizeText($category);
-        $catFallbacks = getCategoryFallbackImages();
-        foreach ($catFallbacks as $catKey => $catImg) {
-            if (str_contains($catNorm, $catKey)) {
-                return $catImg;
-            }
-        }
-
-        // Fallback final
-        return getFallbackImage(600, 450);
+        // Construire un pseudo-produit pour réutiliser getProductImage()
+        // L'ID est basé sur le titre complet pour garantir l'unicité d'image
+        return getProductImage([
+            'id' => abs(crc32($productName . microtime(true))),
+            'title' => $productName,
+            'category_name' => $category,
+            'image' => null,
+        ], 600, 450);
     }
 
     /**

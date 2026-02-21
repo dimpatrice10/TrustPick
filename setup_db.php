@@ -26,35 +26,59 @@ pre { background: #f4f4f4; padding: 10px; border-radius: 5px; overflow-x: auto; 
 echo "<h1>🔧 TrustPick V2 - Initialisation PostgreSQL</h1>";
 
 // Helper pour lire les env vars (Apache ne les passe pas toujours via getenv)
-function setup_env($name) {
+function setup_env($name)
+{
     $val = getenv($name);
-    if ($val !== false) return $val;
-    if (isset($_ENV[$name])) return $_ENV[$name];
-    if (isset($_SERVER[$name])) return $_SERVER[$name];
+    if ($val !== false && $val !== '')
+        return $val;
+    if (!empty($_ENV[$name]))
+        return $_ENV[$name];
+    if (!empty($_SERVER[$name]))
+        return $_SERVER[$name];
     return null;
 }
+
+// Accepter DATABASE_URL via POST (formulaire manuel) ou GET
+$manualDbUrl = $_POST['database_url'] ?? ($_GET['db'] ?? '');
 
 // Vérifier les variables d'environnement
 echo "<h2>1. Vérification de la configuration</h2>";
 
-$databaseUrl = setup_env('DATABASE_URL');
+$databaseUrl = $manualDbUrl ?: setup_env('DATABASE_URL');
 if ($databaseUrl) {
     echo "<p class='success'>✅ DATABASE_URL trouvée</p>";
     $parts = parse_url($databaseUrl);
     echo "<p class='info'>Host: {$parts['host']}, DB: " . ltrim($parts['path'], '/') . "</p>";
+    if ($manualDbUrl) {
+        echo "<p class='info'>ℹ️ Utilisation de l'URL saisie manuellement</p>";
+    }
 } else {
     $pgHost = setup_env('PGHOST');
     if ($pgHost) {
         echo "<p class='success'>✅ Variables PG individuelles trouvées (PGHOST={$pgHost})</p>";
     } else {
-        echo "<p class='error'>❌ Aucune variable de connexion trouvée !</p>";
-        echo "<p>Configurez DATABASE_URL ou les variables PGHOST, PGDATABASE, etc.</p>";
-        // Afficher les env vars disponibles pour debug
-        echo "<h3>Debug - Variables disponibles:</h3><pre>";
-        echo "getenv('DATABASE_URL'): " . var_export(getenv('DATABASE_URL'), true) . "\n";
-        echo "\$_ENV keys: " . implode(', ', array_keys($_ENV ?: [])) . "\n";
-        echo "\$_SERVER['DATABASE_URL']: " . ($_SERVER['DATABASE_URL'] ?? 'non définie') . "\n";
-        echo "</pre>";
+        echo "<p class='error'>❌ Aucune variable d'environnement DATABASE_URL détectée.</p>";
+        echo "<p>La variable DATABASE_URL n'est pas configurée dans votre service Render.</p>";
+
+        echo "<h3>Option 1 : Configurer DATABASE_URL dans Render (recommandé)</h3>";
+        echo "<ol>";
+        echo "<li>Allez sur <a href='https://dashboard.render.com' target='_blank'>dashboard.render.com</a></li>";
+        echo "<li>Cliquez sur votre <strong>base de données PostgreSQL</strong></li>";
+        echo "<li>Copiez l'<strong>Internal Database URL</strong></li>";
+        echo "<li>Allez dans votre <strong>service web trustpick</strong> → <strong>Environment</strong></li>";
+        echo "<li>Ajoutez la variable : <code>DATABASE_URL</code> = l'URL copiée</li>";
+        echo "<li>Cliquez <strong>Save Changes</strong> → le service va redémarrer</li>";
+        echo "<li>Revenez sur cette page</li>";
+        echo "</ol>";
+
+        echo "<h3>Option 2 : Saisir l'URL manuellement (pour test immédiat)</h3>";
+        echo "<p>Copiez l'<strong>External Database URL</strong> depuis votre base PostgreSQL Render :</p>";
+        echo "<form method='POST' action='?key=trustpick_setup_2026'>";
+        echo "<input type='text' name='database_url' placeholder='postgresql://user:pass@host:port/dbname' ";
+        echo "style='width:100%;padding:10px;font-size:14px;margin:10px 0;box-sizing:border-box;' required>";
+        echo "<button type='submit' style='padding:10px 30px;background:#007bff;color:white;border:none;cursor:pointer;font-size:16px;'>Connecter et initialiser</button>";
+        echo "</form>";
+
         exit("</body></html>");
     }
 }
@@ -63,17 +87,27 @@ if ($databaseUrl) {
 echo "<h2>2. Connexion à PostgreSQL</h2>";
 
 try {
-    require_once __DIR__ . '/includes/config.php';
-    $config = require __DIR__ . '/includes/config.php';
-
-    $port = $config['db_port'] ?? 5432;
-    $dsn = "pgsql:host={$config['db_host']};port={$port};dbname={$config['db_name']}";
-
-    if (setup_env('DATABASE_URL')) {
-        $dsn .= ";sslmode=require";
+    // Si URL manuelle fournie, on l'utilise directement sans passer par config.php
+    if ($manualDbUrl) {
+        $dbParts = parse_url($manualDbUrl);
+        $dbHost = $dbParts['host'] ?? '127.0.0.1';
+        $dbPort = $dbParts['port'] ?? 5432;
+        $dbName = ltrim($dbParts['path'] ?? '/trustpick', '/');
+        $dbUser = $dbParts['user'] ?? 'postgres';
+        $dbPass = $dbParts['pass'] ?? '';
+    } else {
+        require_once __DIR__ . '/includes/config.php';
+        $config = require __DIR__ . '/includes/config.php';
+        $dbHost = $config['db_host'];
+        $dbPort = $config['db_port'] ?? 5432;
+        $dbName = $config['db_name'];
+        $dbUser = $config['db_user'];
+        $dbPass = $config['db_pass'];
     }
 
-    $pdo = new PDO($dsn, $config['db_user'], $config['db_pass'], [
+    $dsn = "pgsql:host={$dbHost};port={$dbPort};dbname={$dbName};sslmode=require";
+
+    $pdo = new PDO($dsn, $dbUser, $dbPass, [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
     ]);

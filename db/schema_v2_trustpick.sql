@@ -332,6 +332,7 @@ INSERT INTO categories (name, slug, icon) VALUES
 -- Configuration système
 INSERT INTO system_settings (setting_key, setting_value, description) VALUES
 ('referral_reward', '5000', 'Récompense de parrainage en FCFA'),
+('min_deposit', '10', 'Montant minimum de dépôt en FCFA'),
 ('min_withdrawal', '5000', 'Montant minimum de retrait en FCFA'),
 ('daily_notifications_count', '2', 'Nombre minimum de notifications par jour'),
 ('products_generation_frequency', '3', 'Nombre de générations de produits par jour'),

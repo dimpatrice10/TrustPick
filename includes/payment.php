@@ -8,6 +8,7 @@ require_once __DIR__ . '/env.php';
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/task_manager.php';
+require_once __DIR__ . '/settings.php';
 require_once __DIR__ . '/../vendor/autoload.php';
 
 use MeSomb\Operation\PaymentOperation;
@@ -44,8 +45,8 @@ class PaymentManager
     public function initiatePayment($userId, $amount, $phone, $service = 'ORANGE')
     {
         try {
-            // Validation
-            $minDeposit = $this->config['payment']['min_deposit'];
+            // Validation - lire le minimum depuis system_settings (DB)
+            $minDeposit = Settings::getInt('min_deposit', 10);
             if ($amount < $minDeposit) {
                 return [
                     'success' => false,
@@ -315,7 +316,7 @@ class PaymentManager
             require_once __DIR__ . '/task_manager.php';
             $checkTask = TaskManager::isTaskCompletedToday($userId, 'deposit_5000', $this->pdo);
 
-            if (!$checkTask && $amount >= $this->config['payment']['min_deposit']) {
+            if (!$checkTask && $amount >= Settings::getInt('min_deposit', 10)) {
                 TaskManager::completeTask($userId, 'deposit_5000', $this->pdo);
 
                 // Notification

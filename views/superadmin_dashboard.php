@@ -3,6 +3,7 @@ require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/session.php';
 require_once __DIR__ . '/../includes/url.php';
 require_once __DIR__ . '/../includes/helpers.php';
+require_once __DIR__ . '/../includes/settings.php';
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -25,6 +26,14 @@ $recentUsers = $pdo->query('SELECT id, cau, name, role, created_at FROM users OR
 
 // Entreprises actives
 $companies = $pdo->query('SELECT id, name, slug, is_active, created_at FROM companies ORDER BY created_at DESC LIMIT 10')->fetchAll();
+
+// Paramètres système
+$settingsMinDeposit = Settings::getInt('min_deposit', 10);
+$settingsMinWithdrawal = Settings::getInt('min_withdrawal', 5000);
+$settingsReviewReward = Settings::getInt('review_reward', 500);
+$settingsReferralReward = Settings::getInt('referral_reward', 5000);
+$settingsDailyNotif = Settings::getInt('daily_notifications_count', 2);
+$settingsProdGenFreq = Settings::getInt('products_generation_frequency', 3);
 
 // Dernières transactions importantes
 $topTransactions = $pdo->query('
@@ -172,6 +181,111 @@ $topTransactions = $pdo->query('
                             <i class="bi bi-plus-circle me-1"></i>Générer des Entreprises
                         </button>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Paramètres Système -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-gear me-2"></i>Paramètres Système</h5>
+                    <span class="badge bg-secondary">Configuration</span>
+                </div>
+                <div class="card-body">
+                    <form action="<?= url('actions/save_settings.php') ?>" method="POST" id="settingsForm">
+                        <div class="row g-3">
+                            <!-- Paiements -->
+                            <div class="col-12">
+                                <h6 class="text-primary mb-3"><i class="bi bi-wallet2 me-1"></i>Paiements & Portefeuille</h6>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Dépôt minimum (FCFA)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-arrow-down-circle"></i></span>
+                                    <input type="number" name="min_deposit" class="form-control" 
+                                           value="<?= $settingsMinDeposit ?>" min="1" required>
+                                    <span class="input-group-text">FCFA</span>
+                                </div>
+                                <div class="form-text">Montant minimum pour un dépôt Mobile Money</div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Retrait minimum (FCFA)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-arrow-up-circle"></i></span>
+                                    <input type="number" name="min_withdrawal" class="form-control" 
+                                           value="<?= $settingsMinWithdrawal ?>" min="1" required>
+                                    <span class="input-group-text">FCFA</span>
+                                </div>
+                                <div class="form-text">Montant minimum pour une demande de retrait</div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Devise</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-currency-exchange"></i></span>
+                                    <input type="text" class="form-control" value="XAF (FCFA)" disabled>
+                                </div>
+                                <div class="form-text">Devise fixe pour le Cameroun</div>
+                            </div>
+
+                            <!-- Récompenses -->
+                            <div class="col-12 mt-4">
+                                <h6 class="text-success mb-3"><i class="bi bi-gift me-1"></i>Récompenses</h6>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Récompense par avis (FCFA)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-star"></i></span>
+                                    <input type="number" name="review_reward" class="form-control" 
+                                           value="<?= $settingsReviewReward ?>" min="0" required>
+                                    <span class="input-group-text">FCFA</span>
+                                </div>
+                                <div class="form-text">Montant gagné par avis validé</div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Récompense parrainage (FCFA)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-people"></i></span>
+                                    <input type="number" name="referral_reward" class="form-control" 
+                                           value="<?= $settingsReferralReward ?>" min="0" required>
+                                    <span class="input-group-text">FCFA</span>
+                                </div>
+                                <div class="form-text">Montant gagné par parrainage réussi</div>
+                            </div>
+
+                            <!-- Système -->
+                            <div class="col-12 mt-4">
+                                <h6 class="text-info mb-3"><i class="bi bi-sliders me-1"></i>Système</h6>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Notifications / jour</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-bell"></i></span>
+                                    <input type="number" name="daily_notifications_count" class="form-control" 
+                                           value="<?= $settingsDailyNotif ?>" min="0" required>
+                                </div>
+                                <div class="form-text">Nombre de notifications quotidiennes</div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Fréq. génération produits</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-box-seam"></i></span>
+                                    <input type="number" name="products_generation_frequency" class="form-control" 
+                                           value="<?= $settingsProdGenFreq ?>" min="1" required>
+                                </div>
+                                <div class="form-text">Nombre de générations / jour</div>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-primary" id="btnSaveSettings">
+                                <i class="bi bi-check-circle me-1"></i>Enregistrer les paramètres
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>

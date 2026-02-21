@@ -6,6 +6,7 @@ if (session_status() === PHP_SESSION_NONE) {
 require __DIR__ . '/../includes/url.php';
 require __DIR__ . '/../includes/db.php';
 require __DIR__ . '/../includes/helpers.php';
+require __DIR__ . '/../includes/settings.php';
 
 if (empty($_SESSION['user_id'])) {
     addToast('error', 'Connectez-vous pour faire un retrait.');
@@ -14,9 +15,10 @@ if (empty($_SESSION['user_id'])) {
 
 $amount = floatval($_POST['amount'] ?? 0);
 
-// Vérifier montant minimum: 5 000 FCFA
-if ($amount < 5000) {
-    addToast('error', 'Montant minimum de retrait: ' . formatFCFA(5000));
+// Vérifier montant minimum depuis system_settings
+$minWithdrawal = Settings::getInt('min_withdrawal', 5000);
+if ($amount < $minWithdrawal) {
+    addToast('error', 'Montant minimum de retrait: ' . formatFCFA($minWithdrawal));
     redirect(url('index.php?page=wallet'));
 }
 

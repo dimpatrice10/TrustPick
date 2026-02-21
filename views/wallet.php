@@ -5,6 +5,7 @@
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/url.php';
 require_once __DIR__ . '/../includes/helpers.php';
+require_once __DIR__ . '/../includes/settings.php';
 
 if (session_status() === PHP_SESSION_NONE)
     session_start();
@@ -16,6 +17,10 @@ if (empty($_SESSION['user_id'])) {
 }
 
 $uid = intval($_SESSION['user_id']);
+
+// Paramètres dynamiques
+$minDeposit = Settings::getInt('min_deposit', 10);
+$minWithdrawal = Settings::getInt('min_withdrawal', 5000);
 
 // Solde actuel
 $balStmt = $pdo->prepare('SELECT COALESCE(balance, 0) FROM users WHERE id = ?');
@@ -133,7 +138,9 @@ $canWithdraw = $balance >= $minWithdrawal;
                             <h5 class="mb-2"><i class="bi bi-plus-circle-fill text-primary me-2"></i>Effectuer un Dépôt
                             </h5>
                             <p class="text-muted mb-2">
-                                Le dépôt minimum de <strong>5000 FCFA</strong> est une tâche quotidienne obligatoire
+                                Le dépôt minimum de <strong>
+                                    <?= number_format($minDeposit, 0, ',', ' ') ?> FCFA
+                                </strong> est une tâche quotidienne obligatoire
                                 pour débloquer
                                 toutes vos récompenses.
                             </p>
@@ -395,7 +402,8 @@ $canWithdraw = $balance >= $minWithdrawal;
                 <div class="modal-body">
                     <div class="alert alert-info mb-3">
                         <i class="bi bi-info-circle me-1"></i>
-                        <strong>Minimum requis :</strong> 5000 FCFA<br>
+                        <strong>Minimum requis :</strong>
+                        <?= number_format($minDeposit, 0, ',', ' ') ?> FCFA<br>
                         <small>Ce dépôt valide votre tâche quotidienne.</small>
                     </div>
 
@@ -437,8 +445,9 @@ $canWithdraw = $balance >= $minWithdrawal;
                     <!-- Montant -->
                     <div class="mb-3">
                         <label class="form-label">Montant à déposer (FCFA) <span class="text-danger">*</span></label>
-                        <input type="number" name="amount" class="form-control form-control-lg" min="5000" step="1000"
-                            placeholder="Ex: 5000" value="5000" required id="amountInput">
+                        <input type="number" name="amount" class="form-control form-control-lg" min="<?= $minDeposit ?>"
+                            step="100" placeholder="Ex: <?= $minDeposit ?>" value="<?= $minDeposit ?>" required
+                            id="amountInput">
                     </div>
 
                     <!-- Montants rapides -->

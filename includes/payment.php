@@ -1,18 +1,22 @@
 <?php
 /**
  * TrustPick V2 - Gestionnaire de Paiements Mobile Money
- * Intégration avec MeSomb pour Orange Money et MTN Mobile Money
+ * Intégration avec MeSomb SDK officiel pour Orange Money et MTN Mobile Money
  */
 
+require_once __DIR__ . '/env.php';
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/task_manager.php';
+require_once __DIR__ . '/../vendor/autoload.php';
+
+use MeSomb\Operation\PaymentOperation;
+use MeSomb\Util\RandomGenerator;
 
 class PaymentManager
 {
     private $config;
     private $pdo;
-    private $apiUrl;
     private $applicationKey;
     private $accessKey;
     private $secretKey;
@@ -23,7 +27,6 @@ class PaymentManager
         $this->pdo = Database::getInstance()->getConnection();
 
         $mesombConfig = $this->config['payment']['mesomb'];
-        $this->apiUrl = $mesombConfig['api_url'];
         $this->applicationKey = $mesombConfig['application_key'];
         $this->accessKey = $mesombConfig['access_key'];
         $this->secretKey = $mesombConfig['secret_key'];
@@ -124,7 +127,7 @@ class PaymentManager
     }
 
     /**
-     * Effectuer une collection MeSomb
+     * Effectuer une collection MeSomb via le SDK officiel
      * 
      * @param float $amount Montant
      * @param string $phone Numéro de téléphone
@@ -135,51 +138,44 @@ class PaymentManager
     private function makeCollection($amount, $phone, $service, $reference)
     {
         try {
-            $endpoint = '/payment/collect/';
+            $client = new PaymentOperation(
+                $this->applicationKey,
+                $this->accessKey,
+                $this->secretKey
+            );
 
-            // Préparer les données
-            $data = [
+            $response = $client->makeCollect([
                 'amount' => intval($amount),
-                'service' => strtoupper($service), // MTN ou ORANGE
+                'service' => strtoupper($service),
                 'payer' => $phone,
                 'currency' => 'XAF',
                 'country' => 'CM',
-                'reference' => $reference,
-                'fees' => false // TrustPick paie les frais
-            ];
+                'fees' => false,
+                'trxID' => $reference,
+                'nonce' => RandomGenerator::nonce()
+            ]);
 
-            // Générer la signature (nonce + timestamp)
-            $nonce = bin2hex(random_bytes(16));
-            $timestamp = time();
+            $transactionPk = $response->transaction->pk ?? null;
+            $status = $response->transaction->status ?? null;
 
-            // Appel API
-            $response = $this->callMeSombAPI($endpoint, $data, 'POST', $nonce, $timestamp);
-
-            if (isset($response['success']) && $response['success'] === true) {
+            if ($response->success) {
                 return [
                     'success' => true,
                     'message' => 'Paiement collecté avec succès',
-                    'transaction_id' => $response['transaction']['pk'] ?? null,
-                    'status' => 'success',
+                    'transaction_id' => $transactionPk,
+                    'status' => ($status === 'SUCCESS') ? 'success' : 'pending',
                     'requires_ussd' => false,
                     'data' => $response
-                ];
-            } elseif (isset($response['detail'])) {
-                // Erreur spécifique MeSomb
-                return [
-                    'success' => false,
-                    'message' => $response['detail'],
-                    'requires_ussd' => $this->shouldUseUSSD($response['detail'])
                 ];
             } else {
                 return [
                     'success' => false,
-                    'message' => 'Erreur de paiement MeSomb',
+                    'message' => $response->message ?? 'Échec du paiement MeSomb',
                     'requires_ussd' => true
                 ];
             }
 
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             error_log('MeSomb Collection Error: ' . $e->getMessage());
             return [
                 'success' => false,
@@ -226,15 +222,23 @@ class PaymentManager
 
             // Sinon vérifier auprès de MeSomb si on a un ID MeSomb
             if (!empty($transaction['mesomb_reference'])) {
-                $endpoint = '/payment/transactions/' . $transaction['mesomb_reference'] . '/';
-                $response = $this->callMeSombAPI($endpoint, null, 'GET');
-
-                if (isset($response['status'])) {
-                    return [
-                        'success' => true,
-                        'status' => $response['status'],
-                        'data' => $response
-                    ];
+                try {
+                    $client = new PaymentOperation(
+                        $this->applicationKey,
+                        $this->accessKey,
+                        $this->secretKey
+                    );
+                    $transactions = $client->getTransactions([$transaction['mesomb_reference']]);
+                    if (!empty($transactions) && isset($transactions[0])) {
+                        $mesombStatus = $transactions[0]->status ?? 'PENDING';
+                        return [
+                            'success' => true,
+                            'status' => strtolower($mesombStatus),
+                            'data' => $transactions[0]
+                        ];
+                    }
+                } catch (\Exception $e) {
+                    error_log('MeSomb status check error: ' . $e->getMessage());
                 }
             }
 
@@ -245,7 +249,7 @@ class PaymentManager
                 'transaction' => $transaction
             ];
 
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             return [
                 'success' => false,
                 'message' => $e->getMessage(),
@@ -392,98 +396,6 @@ class PaymentManager
             error_log('Webhook Error: ' . $e->getMessage());
             return false;
         }
-    }
-
-    /**
-     * Appel API MeSomb
-     * 
-     * @param string $endpoint Endpoint de l'API
-     * @param array|null $data Données à envoyer
-     * @param string $method Méthode HTTP
-     * @param string $nonce Nonce pour la signature
-     * @param int $timestamp Timestamp pour la signature
-     * @return array Réponse de l'API
-     */
-    private function callMeSombAPI($endpoint, $data = null, $method = 'POST', $nonce = null, $timestamp = null)
-    {
-        $url = $this->apiUrl . $endpoint;
-
-        // Générer nonce et timestamp si non fournis
-        if ($nonce === null) {
-            $nonce = bin2hex(random_bytes(16));
-        }
-        if ($timestamp === null) {
-            $timestamp = time();
-        }
-
-        // Générer la signature
-        $signature = $this->generateSignature($method, $endpoint, $nonce, $timestamp, $data);
-
-        $headers = [
-            'X-MeSomb-Application: ' . $this->applicationKey,
-            'X-MeSomb-AccessKey: ' . $this->accessKey,
-            'X-MeSomb-Nonce: ' . $nonce,
-            'X-MeSomb-Timestamp: ' . $timestamp,
-            'X-MeSomb-Signature: ' . $signature,
-            'Content-Type: application/json',
-            'Accept: application/json'
-        ];
-
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
-
-        if ($method === 'POST' && $data) {
-            curl_setopt($ch, CURLOPT_POST, true);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-        } elseif ($method === 'GET') {
-            curl_setopt($ch, CURLOPT_HTTPGET, true);
-        }
-
-        $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $error = curl_error($ch);
-        curl_close($ch);
-
-        if ($error) {
-            throw new Exception('Erreur cURL: ' . $error);
-        }
-
-        $decodedResponse = json_decode($response, true);
-
-        if ($httpCode >= 400) {
-            $errorMsg = $decodedResponse['detail'] ?? $decodedResponse['message'] ?? 'Erreur inconnue';
-            throw new Exception('Erreur API MeSomb: ' . $errorMsg);
-        }
-
-        return $decodedResponse;
-    }
-
-    /**
-     * Générer la signature pour MeSomb
-     * 
-     * @param string $method HTTP method
-     * @param string $endpoint API endpoint
-     * @param string $nonce Nonce
-     * @param int $timestamp Timestamp
-     * @param array|null $data Données de la requête
-     * @return string Signature
-     */
-    private function generateSignature($method, $endpoint, $nonce, $timestamp, $data = null)
-    {
-        // Construction du message à signer selon la doc MeSomb
-        $message = $method . "\n" . $endpoint . "\n" . $timestamp . "\n" . $nonce;
-
-        if ($data) {
-            $message .= "\n" . json_encode($data);
-        }
-
-        // Signature HMAC-SHA256 avec la secret key
-        $signature = hash_hmac('sha256', $message, $this->secretKey);
-
-        return $signature;
     }
 
     /**

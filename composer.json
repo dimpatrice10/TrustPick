@@ -1,0 +1,9 @@
+{
+    "name": "trustpick/trustpick",
+    "description": "TrustPick V2",
+    "type": "project",
+    "minimum-stability": "stable",
+    "require": {
+        "hachther/mesomb-php": "^3.1"
+    }
+}

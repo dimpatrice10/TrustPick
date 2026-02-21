@@ -10,6 +10,9 @@ RUN apt-get update && apt-get install -y \
 # Installer les extensions PHP nécessaires
 RUN docker-php-ext-install pdo pdo_pgsql pgsql curl
 
+# Installer Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
 # Activer mod_rewrite pour Apache
 RUN a2enmod rewrite headers
 
@@ -28,6 +31,9 @@ RUN echo "upload_max_filesize = 10M" >> "$PHP_INI_DIR/php.ini" \
 
 # Copier les fichiers du projet
 COPY . /var/www/html/
+
+# Installer les dépendances Composer (MeSomb SDK)
+RUN cd /var/www/html && composer install --no-dev --optimize-autoloader --no-interaction
 
 # Rendre le script d'entrée exécutable
 RUN chmod +x /var/www/html/docker-entrypoint.sh

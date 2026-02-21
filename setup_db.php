@@ -96,13 +96,28 @@ try {
         $dbUser = $dbParts['user'] ?? 'postgres';
         $dbPass = $dbParts['pass'] ?? '';
     } else {
-        require_once __DIR__ . '/includes/config.php';
+        // Ne pas utiliser require_once puis require (le 2e retourne true)
         $config = require __DIR__ . '/includes/config.php';
-        $dbHost = $config['db_host'];
-        $dbPort = $config['db_port'] ?? 5432;
-        $dbName = $config['db_name'];
-        $dbUser = $config['db_user'];
-        $dbPass = $config['db_pass'];
+        if (!is_array($config)) {
+            // Si config.php a déjà été inclus, tp_env() est disponible
+            $dbUrl2 = function_exists('tp_env') ? tp_env('DATABASE_URL') : null;
+            if ($dbUrl2) {
+                $dbParts = parse_url($dbUrl2);
+                $dbHost = $dbParts['host'] ?? '127.0.0.1';
+                $dbPort = $dbParts['port'] ?? 5432;
+                $dbName = ltrim($dbParts['path'] ?? '/trustpick', '/');
+                $dbUser = $dbParts['user'] ?? 'postgres';
+                $dbPass = $dbParts['pass'] ?? '';
+            } else {
+                throw new Exception('Impossible de charger la configuration de la base de données');
+            }
+        } else {
+            $dbHost = $config['db_host'];
+            $dbPort = $config['db_port'] ?? 5432;
+            $dbName = $config['db_name'];
+            $dbUser = $config['db_user'];
+            $dbPass = $config['db_pass'];
+        }
     }
 
     $dsn = "pgsql:host={$dbHost};port={$dbPort};dbname={$dbName};sslmode=require";

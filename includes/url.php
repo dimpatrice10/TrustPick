@@ -28,7 +28,15 @@
 if (!defined('BASE_URL')) {
 
     // 1) PROTOCOLE + HOST
-    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    // Render/Cloudflare terminate SSL at the proxy level — Apache sees HTTP internally.
+    // Check X-Forwarded-Proto header first (set by reverse proxies like Render).
+    if (!empty($_SERVER['HTTP_X_FORWARDED_PROTO'])) {
+        $protocol = $_SERVER['HTTP_X_FORWARDED_PROTO'];
+    } elseif (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
+        $protocol = 'https';
+    } else {
+        $protocol = 'http';
+    }
     $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
 
     // 2) CHEMIN FILESYSTEM DU PROJET (source de vérité)

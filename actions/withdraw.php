@@ -41,24 +41,24 @@ try {
     $pdo->beginTransaction();
 
     // Créer demande de retrait
-    $stmt = $pdo->prepare('INSERT INTO withdrawals (user_id,amount,status,created_at) VALUES (?,?,"pending",NOW())');
+    $stmt = $pdo->prepare("INSERT INTO withdrawals (user_id,amount,status,created_at) VALUES (?,?,'pending',NOW())");
     $stmt->execute([$_SESSION['user_id'], $amount]);
 
     // Débiter le solde
     $pdo->prepare('UPDATE users SET balance = balance - ? WHERE id = ?')->execute([$amount, $_SESSION['user_id']]);
 
     // Enregistrer transaction
-    $stmt = $pdo->prepare('
+    $stmt = $pdo->prepare("
         INSERT INTO transactions (user_id, type, amount, description, created_at)
-        VALUES (?, "withdrawal", ?, "Demande de retrait", NOW())
-    ');
+        VALUES (?, 'withdrawal', ?, 'Demande de retrait', NOW())
+    ");
     $stmt->execute([$_SESSION['user_id'], -$amount]);
 
     // Créer notification
-    $stmt = $pdo->prepare('
+    $stmt = $pdo->prepare("
         INSERT INTO notifications (user_id, title, message, type, created_at)
-        VALUES (?, "Retrait demandé", ?, "info", NOW())
-    ');
+        VALUES (?, 'Retrait demandé', ?, 'info', NOW())
+    ");
     $msg = 'Votre demande de retrait de ' . formatFCFA($amount) . ' est en cours de traitement.';
     $stmt->execute([$_SESSION['user_id'], $msg]);
 

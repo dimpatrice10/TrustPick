@@ -15,9 +15,9 @@ SessionManager::requireRole('super_admin', 'index.php?page=login');
 $totalUsers = $pdo->query('SELECT COUNT(*) FROM users')->fetchColumn();
 $totalCompanies = $pdo->query('SELECT COUNT(*) FROM companies')->fetchColumn();
 $totalProducts = $pdo->query('SELECT COUNT(*) FROM products')->fetchColumn();
-$totalTransactions = $pdo->query('SELECT COALESCE(SUM(amount), 0) FROM transactions WHERE type IN ("reward", "referral")')->fetchColumn();
+$totalTransactions = $pdo->query("SELECT COALESCE(SUM(amount), 0) FROM transactions WHERE type IN ('reward', 'referral')")->fetchColumn();
 $totalReviews = $pdo->query('SELECT COUNT(*) FROM reviews')->fetchColumn();
-$pendingWithdrawals = $pdo->query('SELECT COUNT(*) FROM withdrawals WHERE status = "pending"')->fetchColumn();
+$pendingWithdrawals = $pdo->query("SELECT COUNT(*) FROM withdrawals WHERE status = 'pending'")->fetchColumn();
 $totalReferrals = $pdo->query('SELECT COUNT(*) FROM referrals')->fetchColumn();
 
 // Utilisateurs récents

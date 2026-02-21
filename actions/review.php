@@ -57,10 +57,10 @@ try {
         $newBalance = $balanceStmt->fetchColumn();
 
         // Enregistrer transaction avec balance_after
-        $stmt = $pdo->prepare('
+        $stmt = $pdo->prepare("
             INSERT INTO transactions (user_id, type, amount, description, reference_type, balance_after, created_at)
-            VALUES (?, "reward", ?, "Avis posté sur produit", "review", ?, NOW())
-        ');
+            VALUES (?, 'reward', ?, 'Avis posté sur produit', 'review', ?, NOW())
+        ");
         $stmt->execute([$user_id, $reward, $newBalance]);
 
         // Compléter la tâche
@@ -70,20 +70,20 @@ try {
         $_SESSION['balance'] = $newBalance;
 
         // Créer notification
-        $stmt = $pdo->prepare('
+        $stmt = $pdo->prepare("
             INSERT INTO notifications (user_id, title, message, type, created_at)
-            VALUES (?, "Avis publié", ?, "success", NOW())
-        ');
+            VALUES (?, 'Avis publié', ?, 'success', NOW())
+        ");
         $stmt->execute([$user_id, 'Merci pour votre avis ! +' . formatFCFA($reward) . ' crédités.']);
 
         $message .= ' +' . formatFCFA($reward) . ' ajoutés à votre solde.';
         addToast('success', $message);
     } else {
         // Avis publié mais pas de récompense (tâches précédentes non complétées)
-        $stmt = $pdo->prepare('
+        $stmt = $pdo->prepare("
             INSERT INTO notifications (user_id, title, message, type, created_at)
-            VALUES (?, "Avis publié", ?, "info", NOW())
-        ');
+            VALUES (?, 'Avis publié', ?, 'info', NOW())
+        ");
         $stmt->execute([$user_id, 'Votre avis a été publié. ' . $canExecute['message']]);
 
         addToast('warning', $message . ' ' . $canExecute['message']);

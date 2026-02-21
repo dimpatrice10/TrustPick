@@ -79,12 +79,12 @@ $activities = $actStmt->fetchAll();
 // Gains du mois
 $monthGains = 0;
 try {
-  $monthStmt = $pdo->prepare('
+  $monthStmt = $pdo->prepare("
         SELECT COALESCE(SUM(amount), 0) 
         FROM transactions 
-        WHERE user_id = ? AND type IN ("reward", "referral") 
+        WHERE user_id = ? AND type IN ('reward', 'referral') 
         AND created_at >= DATE_TRUNC('month', NOW())
-    ');
+    ");
   $monthStmt->execute([$uid]);
   $monthGains = floatval($monthStmt->fetchColumn());
 } catch (Exception $e) {

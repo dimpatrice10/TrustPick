@@ -90,10 +90,10 @@ try {
         $adminCAU = $auth->generateCAU('admin_entreprise');
         $adminReferralCode = $auth->generateReferralCode();
 
-        $stmt = $pdo->prepare('
+        $stmt = $pdo->prepare("
             INSERT INTO users (cau, name, phone, role, company_id, balance, referral_code, is_active, created_by, created_at)
-            VALUES (?, ?, ?, "admin_entreprise", ?, 0, ?, TRUE, ?, NOW())
-        ');
+            VALUES (?, ?, ?, 'admin_entreprise', ?, 0, ?, TRUE, ?, NOW())
+        ");
         $stmt->execute([$adminCAU, $adminName, $adminPhone, $companyId, $adminReferralCode, $user_id]);
 
         // Générer des produits si demandé
@@ -101,13 +101,13 @@ try {
             $selectedSector = $sectors[array_rand($sectors)];
             $products = $productNames[$selectedSector] ?? ['Produit Premium', 'Article Qualité', 'Nouveauté', 'Best-seller', 'Exclusivité'];
             $numProducts = rand(5, 10);
-            
+
             for ($p = 0; $p < $numProducts; $p++) {
                 $productName = $products[array_rand($products)] . ' ' . explode(' ', $companyName)[0] . ' #' . rand(100, 999);
                 $productSlug = strtolower(preg_replace('/[^a-zA-Z0-9]+/', '-', $productName)) . '-' . uniqid();
                 $productPrice = rand(5, 100) * 1000; // 5000 à 100000 FCFA
                 $productDesc = "Découvrez $productName par $companyName. Produit de qualité supérieure.";
-                
+
                 $pdo->prepare('
                     INSERT INTO products (company_id, title, slug, description, price, is_auto_generated, is_active, created_by, created_at)
                     VALUES (?, ?, ?, ?, ?, TRUE, TRUE, ?, NOW())

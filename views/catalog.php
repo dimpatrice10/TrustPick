@@ -23,7 +23,7 @@ try {
 $hasStock = false;
 $hasEco = false;
 try {
-  $colStmt = $pdo->prepare("SELECT column_name FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'products' AND column_name IN ('stock','is_eco')");
+  $colStmt = $pdo->prepare("SELECT column_name FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'products' AND column_name IN ('stock','is_eco')");
   $colStmt->execute();
   $cols = $colStmt->fetchAll(PDO::FETCH_COLUMN);
   $hasStock = in_array('stock', $cols, true);
@@ -123,7 +123,7 @@ $off = intval($offset);
 // main products query with subqueries for metrics
 $hasReco = false;
 try {
-  $chk = $pdo->prepare("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = ?");
+  $chk = $pdo->prepare("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name = ?");
   $chk->execute(['recommendations']);
   $hasReco = intval($chk->fetchColumn()) > 0;
 } catch (Exception $e) {

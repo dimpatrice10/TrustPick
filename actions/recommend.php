@@ -84,10 +84,10 @@ try {
         $newBalance = $balanceStmt->fetchColumn();
 
         // Enregistrer la transaction
-        $pdo->prepare('
+        $pdo->prepare("
             INSERT INTO transactions (user_id, type, amount, description, reference_type, balance_after, created_at)
-            VALUES (?, "reward", ?, ?, "recommendation", ?, NOW())
-        ')->execute([$user_id, $reward, 'Recommandation produit: ' . $product['title'], $newBalance]);
+            VALUES (?, 'reward', ?, ?, 'recommendation', ?, NOW())
+        ")->execute([$user_id, $reward, 'Recommandation produit: ' . $product['title'], $newBalance]);
 
         // Mettre à jour la session
         $_SESSION['balance'] = $newBalance;
@@ -96,10 +96,10 @@ try {
         TaskManager::completeTask($user_id, 'recommend_product', $pdo);
 
         // Créer notification
-        $pdo->prepare('
+        $pdo->prepare("
             INSERT INTO notifications (user_id, type, title, message, created_at)
-            VALUES (?, "reward", "Recommandation envoyée", ?, NOW())
-        ')->execute([$user_id, 'Vous avez recommandé "' . $product['title'] . '" et gagné ' . formatFCFA($reward) . ' !']);
+            VALUES (?, 'reward', 'Recommandation envoyée', ?, NOW())
+        ")->execute([$user_id, 'Vous avez recommandé "' . $product['title'] . '" et gagné ' . formatFCFA($reward) . ' !']);
 
         addToast('success', 'Produit recommandé avec succès ! +' . formatFCFA($reward) . ' crédités.');
     } else {

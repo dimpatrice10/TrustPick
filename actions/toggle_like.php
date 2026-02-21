@@ -106,7 +106,7 @@ try {
                 $action = 'unliked';
             } else {
                 // Changer dislike en like
-                $pdo->prepare('UPDATE review_reactions SET reaction_type = "like" WHERE id = ?')
+                $pdo->prepare("UPDATE review_reactions SET reaction_type = 'like' WHERE id = ?")
                     ->execute([$existingReaction['id']]);
                 $pdo->prepare('UPDATE reviews SET likes_count = likes_count + 1, dislikes_count = GREATEST(dislikes_count - 1, 0) WHERE id = ?')
                     ->execute([$review_id]);
@@ -114,7 +114,7 @@ try {
             }
         } else {
             // Nouveau LIKE
-            $pdo->prepare('INSERT INTO review_reactions (review_id, user_id, reaction_type, created_at) VALUES (?, ?, "like", NOW())')
+            $pdo->prepare("INSERT INTO review_reactions (review_id, user_id, reaction_type, created_at) VALUES (?, ?, 'like', NOW())")
                 ->execute([$review_id, $user_id]);
             $pdo->prepare('UPDATE reviews SET likes_count = likes_count + 1 WHERE id = ?')
                 ->execute([$review_id]);
@@ -139,10 +139,10 @@ try {
             $balanceStmt->execute([$user_id]);
             $newBalance = $balanceStmt->fetchColumn();
 
-            $pdo->prepare('
+            $pdo->prepare("
                 INSERT INTO transactions (user_id, type, amount, description, reference_type, balance_after, created_at)
-                VALUES (?, "reward", ?, "Tâche: Aimer un avis", "like_review", ?, NOW())
-            ')->execute([$user_id, $reward, $newBalance]);
+                VALUES (?, 'reward', ?, 'Tâche: Aimer un avis', 'like_review', ?, NOW())
+            ")->execute([$user_id, $reward, $newBalance]);
 
             TaskManager::completeTask($user_id, 'like_review', $pdo);
 
@@ -153,10 +153,10 @@ try {
 
         // Notification pour l'auteur de l'avis
         if ($review['user_id'] != $user_id) {
-            $pdo->prepare('
+            $pdo->prepare("
                 INSERT INTO notifications (user_id, type, title, message, created_at)
-                VALUES (?, "social", "Nouveau like", "Votre avis a reçu un nouveau like !", NOW())
-            ')->execute([$review['user_id']]);
+                VALUES (?, 'social', 'Nouveau like', 'Votre avis a reçu un nouveau like !', NOW())
+            ")->execute([$review['user_id']]);
         }
     }
 

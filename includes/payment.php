@@ -63,11 +63,11 @@ class PaymentManager
             $reference = 'TP_' . $userId . '_' . time();
 
             // Créer l'enregistrement de transaction en attente
-            $stmt = $this->pdo->prepare('
+            $stmt = $this->pdo->prepare("
                 INSERT INTO payment_transactions 
                 (user_id, reference, amount, phone, channel, status, created_at) 
-                VALUES (?, ?, ?, ?, ?, "pending", NOW())
-            ');
+                VALUES (?, ?, ?, ?, ?, 'pending', NOW())
+            ");
             $channel = strtolower($service);
             $stmt->execute([$userId, $reference, $amount, $phone, $channel]);
             $transactionId = $this->pdo->lastInsertId();
@@ -102,11 +102,11 @@ class PaymentManager
                 ];
             } else {
                 // Échec de l'initialisation
-                $this->pdo->prepare('
+                $this->pdo->prepare("
                     UPDATE payment_transactions 
-                    SET status = "failed"
+                    SET status = 'failed'
                     WHERE id = ?
-                ')->execute([$transactionId]);
+                ")->execute([$transactionId]);
 
                 return [
                     'success' => false,
@@ -288,11 +288,11 @@ class PaymentManager
             $newBalance = $balanceStmt->fetchColumn();
 
             // Enregistrer dans l'historique des transactions
-            $this->pdo->prepare('
+            $this->pdo->prepare("
                 INSERT INTO transactions 
                 (user_id, type, amount, description, reference_type, reference_id, balance_after, created_at)
-                VALUES (?, "deposit", ?, ?, "payment", ?, ?, NOW())
-            ')->execute([
+                VALUES (?, 'deposit', ?, ?, 'payment', ?, ?, NOW())
+            ")->execute([
                         $userId,
                         $amount,
                         'Dépôt Mobile Money - ' . strtoupper($transaction['channel']),
@@ -301,11 +301,11 @@ class PaymentManager
                     ]);
 
             // Mettre à jour le statut de la transaction de paiement
-            $this->pdo->prepare('
+            $this->pdo->prepare("
                 UPDATE payment_transactions 
-                SET status = "success", completed_at = NOW()
+                SET status = 'success', completed_at = NOW()
                 WHERE id = ?
-            ')->execute([$transactionId]);
+            ")->execute([$transactionId]);
 
             // Vérifier et compléter la tâche quotidienne
             require_once __DIR__ . '/task_manager.php';
@@ -315,10 +315,10 @@ class PaymentManager
                 TaskManager::completeTask($userId, 'deposit_5000', $this->pdo);
 
                 // Notification
-                $this->pdo->prepare('
+                $this->pdo->prepare("
                     INSERT INTO notifications (user_id, type, title, message, created_at)
-                    VALUES (?, "reward", "Dépôt validé", ?, NOW())
-                ')->execute([
+                    VALUES (?, 'reward', 'Dépôt validé', ?, NOW())
+                ")->execute([
                             $userId,
                             'Votre dépôt de ' . formatFCFA($amount) . ' a été crédité. Tâche quotidienne validée !'
                         ]);

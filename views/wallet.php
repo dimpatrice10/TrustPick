@@ -33,7 +33,7 @@ $wdCountStmt->execute([$uid]);
 $withdrawalCount = intval($wdCountStmt->fetchColumn());
 
 // Retraits en attente
-$pendingStmt = $pdo->prepare('SELECT COUNT(*) FROM withdrawals WHERE user_id = ? AND status = "pending"');
+$pendingStmt = $pdo->prepare("SELECT COUNT(*) FROM withdrawals WHERE user_id = ? AND status = 'pending'");
 $pendingStmt->execute([$uid]);
 $pendingCount = intval($pendingStmt->fetchColumn());
 

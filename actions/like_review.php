@@ -109,10 +109,10 @@ try {
         $newBalance = $balanceStmt->fetchColumn();
 
         // Enregistrer la transaction
-        $pdo->prepare('
+        $pdo->prepare("
             INSERT INTO transactions (user_id, type, amount, description, reference_type, balance_after, created_at)
-            VALUES (?, "reward", ?, "Like sur un avis", "like_review", ?, NOW())
-        ')->execute([$user_id, $reward, $newBalance]);
+            VALUES (?, 'reward', ?, 'Like sur un avis', 'like_review', ?, NOW())
+        ")->execute([$user_id, $reward, $newBalance]);
 
         // Compléter la tâche
         TaskManager::completeTask($user_id, 'like_review', $pdo);

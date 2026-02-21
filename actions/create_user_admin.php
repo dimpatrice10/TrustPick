@@ -55,10 +55,10 @@ try {
 
     // Si solde initial > 0, créer transaction
     if ($balance > 0) {
-        $stmt = $pdo->prepare('
+        $stmt = $pdo->prepare("
             INSERT INTO transactions (user_id, type, amount, description, created_at)
-            VALUES (?, "reward", ?, "Crédit initial de bienvenue", NOW())
-        ');
+            VALUES (?, 'reward', ?, 'Crédit initial de bienvenue', NOW())
+        ");
         $stmt->execute([$user_id, $balance]);
     }
 

@@ -320,7 +320,7 @@ class TaskSystem
 
             return [
                 'success' => true,
-                'task_id' => $this->db->lastInsertId(),
+                'task_id' => $this->db->lastInsertId('tasks_definitions_id_seq'),
                 'message' => 'Tâche créée avec succès'
             ];
 

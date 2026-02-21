@@ -177,7 +177,7 @@ class AuthCAU
                 $createdBy
             ]);
 
-            $userId = $this->db->lastInsertId();
+            $userId = $this->db->lastInsertId('users_id_seq');
 
             // Si référencé par quelqu'un, créer le lien de parrainage
             if ($referredBy) {

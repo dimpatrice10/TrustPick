@@ -28,7 +28,7 @@ class NotificationSystem
 
             return [
                 'success' => true,
-                'notification_id' => $this->db->lastInsertId()
+                'notification_id' => $this->db->lastInsertId('notifications_id_seq')
             ];
 
         } catch (Exception $e) {

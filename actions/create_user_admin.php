@@ -51,7 +51,7 @@ try {
     $referral_code = $auth->generateReferralCode();
     $stmt->execute([$name, $phone, $cau, $role, $balance, $referral_code]);
 
-    $user_id = $pdo->lastInsertId();
+    $user_id = $pdo->lastInsertId('users_id_seq');
 
     // Si solde initial > 0, créer transaction
     if ($balance > 0) {

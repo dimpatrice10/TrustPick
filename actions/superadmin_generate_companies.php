@@ -82,7 +82,7 @@ try {
             VALUES (?, ?, ?, TRUE, ?, NOW())
         ');
         $stmt->execute([$companyName, $slug, $description, $user_id]);
-        $companyId = $pdo->lastInsertId();
+        $companyId = $pdo->lastInsertId('companies_id_seq');
 
         // Créer un admin pour cette entreprise
         $adminName = 'Admin ' . explode(' ', $companyName)[0];

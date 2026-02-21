@@ -170,7 +170,7 @@ class ProductGenerator
                 $image
             ]);
 
-            $productId = $this->db->lastInsertId();
+            $productId = $this->db->lastInsertId('products_id_seq');
 
             return [
                 'success' => true,

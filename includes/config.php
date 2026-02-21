@@ -5,20 +5,22 @@
  */
 
 // Helper: lire une variable d'environnement depuis toutes les sources possibles
-function tp_env($name, $default = null)
-{
-    // 1. getenv() - fonctionne en CLI et parfois en Apache
-    $val = getenv($name);
-    if ($val !== false)
-        return $val;
-    // 2. $_ENV - fonctionne quand variables_order contient 'E'
-    if (isset($_ENV[$name]))
-        return $_ENV[$name];
-    // 3. $_SERVER - Apache passe souvent les env vars ici via PassEnv
-    if (isset($_SERVER[$name]))
-        return $_SERVER[$name];
-    // 4. Fallback
-    return $default;
+if (!function_exists('tp_env')) {
+    function tp_env($name, $default = null)
+    {
+        // 1. getenv() - fonctionne en CLI et parfois en Apache
+        $val = getenv($name);
+        if ($val !== false)
+            return $val;
+        // 2. $_ENV - fonctionne quand variables_order contient 'E'
+        if (isset($_ENV[$name]))
+            return $_ENV[$name];
+        // 3. $_SERVER - Apache passe souvent les env vars ici via PassEnv
+        if (isset($_SERVER[$name]))
+            return $_SERVER[$name];
+        // 4. Fallback
+        return $default;
+    }
 }
 
 // Support DATABASE_URL de Render (format: postgresql://user:pass@host:port/dbname)

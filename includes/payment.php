@@ -70,7 +70,7 @@ class PaymentManager
             ");
             $channel = strtolower($service);
             $stmt->execute([$userId, $reference, $amount, $phone, $channel]);
-            $transactionId = $this->pdo->lastInsertId();
+            $transactionId = $this->pdo->lastInsertId('payment_transactions_id_seq');
 
             // Appeler l'API MeSomb pour collecter le paiement
             $result = $this->makeCollection($amount, $phone, $service, $reference);

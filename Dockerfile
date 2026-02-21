@@ -5,6 +5,8 @@ FROM php:8.2-apache
 RUN apt-get update && apt-get install -y \
     libpq-dev \
     libcurl4-openssl-dev \
+    unzip \
+    git \
     && rm -rf /var/lib/apt/lists/*
 
 # Installer les extensions PHP nécessaires
@@ -29,11 +31,15 @@ RUN echo "upload_max_filesize = 10M" >> "$PHP_INI_DIR/php.ini" \
     && echo "memory_limit = 256M" >> "$PHP_INI_DIR/php.ini" \
     && echo "max_execution_time = 60" >> "$PHP_INI_DIR/php.ini"
 
-# Copier les fichiers du projet
-COPY . /var/www/html/
+# Copier d'abord les fichiers Composer pour le cache Docker
+COPY composer.json composer.lock /var/www/html/
 
 # Installer les dépendances Composer (MeSomb SDK)
-RUN cd /var/www/html && composer install --no-dev --optimize-autoloader --no-interaction
+WORKDIR /var/www/html
+RUN composer install --no-dev --optimize-autoloader --no-interaction
+
+# Copier le reste des fichiers du projet
+COPY . /var/www/html/
 
 # Rendre le script d'entrée exécutable
 RUN chmod +x /var/www/html/docker-entrypoint.sh

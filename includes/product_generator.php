@@ -251,33 +251,43 @@ class ProductGenerator
 
     /**
      * Obtenir une image pour le produit
+     * Utilise le même mapping que image_helper.php pour cohérence
      */
     private function getProductImage($category, $productName)
     {
-        // Mapping des catégories vers les mots-clés Unsplash
-        $categoryKeywords = [
-            'Électronique' => ['technology', 'gadget', 'electronics', 'smartphone', 'laptop'],
-            'Mode & Accessoires' => ['fashion', 'accessories', 'bag', 'watch', 'sunglasses'],
-            'Maison & Jardin' => ['home', 'furniture', 'appliance', 'decor'],
-            'Alimentation' => ['food', 'cooking', 'ingredient', 'organic'],
-            'Santé & Beauté' => ['beauty', 'cosmetics', 'skincare', 'health'],
-            'Sports & Loisirs' => ['sports', 'fitness', 'outdoor', 'exercise'],
-            'Livres & Culture' => ['books', 'reading', 'culture', 'art'],
-            'Automobile' => ['car', 'automotive', 'vehicle', 'transport'],
-        ];
+        // Charger image_helper.php si pas déjà chargé
+        if (!function_exists('getImageDatabase')) {
+            require_once __DIR__ . '/image_helper.php';
+        }
 
-        $keywords = $categoryKeywords[$category] ?? ['product'];
-        $keyword = $keywords[array_rand($keywords)];
+        $title = normalizeText($productName);
+        $imageDb = getImageDatabase();
 
-        // Option 1: Utiliser Unsplash (nécessite une clé API)
-        // return $this->fetchUnsplashImage($keyword);
+        // Trier les clés par longueur décroissante (plus spécifique d'abord)
+        $keys = array_keys($imageDb);
+        usort($keys, function ($a, $b) {
+            return strlen($b) - strlen($a);
+        });
 
-        // Option 2: Utiliser un placeholder avec le bon mot-clé
-        $randomId = random_int(1, 1000);
-        return "https://source.unsplash.com/800x600/?" . urlencode($keyword) . "&sig=" . $randomId;
+        // Chercher correspondance dans le titre du produit
+        foreach ($keys as $keyword) {
+            if (str_contains($title, $keyword)) {
+                $images = $imageDb[$keyword];
+                return $images[array_rand($images)];
+            }
+        }
 
-        // Option 3: Utiliser un placeholder local
-        // return "assets/img/products/placeholder-" . ($randomId % 10) . ".jpg";
+        // Fallback par catégorie
+        $catNorm = normalizeText($category);
+        $catFallbacks = getCategoryFallbackImages();
+        foreach ($catFallbacks as $catKey => $catImg) {
+            if (str_contains($catNorm, $catKey)) {
+                return $catImg;
+            }
+        }
+
+        // Fallback final
+        return getFallbackImage(600, 450);
     }
 
     /**

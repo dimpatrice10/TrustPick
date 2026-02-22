@@ -28,7 +28,7 @@ $recentUsers = $pdo->query('SELECT id, cau, name, role, created_at FROM users OR
 $companies = $pdo->query('SELECT id, name, slug, is_active, created_at FROM companies ORDER BY created_at DESC LIMIT 10')->fetchAll();
 
 // Paramètres système
-$settingsMinDeposit = Settings::getInt('min_deposit', 1000);
+$settingsMinDeposit = Settings::getInt('min_deposit', 10);
 $settingsMinWithdrawal = Settings::getInt('min_withdrawal', 5000);
 $settingsReviewReward = Settings::getInt('review_reward', 500);
 $settingsReferralReward = Settings::getInt('referral_reward', 5000);

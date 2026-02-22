@@ -224,34 +224,23 @@ if (!empty($_SESSION['user_id'])) {
     <?php endif; ?>
   </section>
 
-  <?php if (!empty($_SESSION['user_id'])): ?>
-    <?php
-    // Vérifier si l'utilisateur a effectué un dépôt >= 1000 FCFA
-    $depositCheckStmt = $pdo->prepare("
-        SELECT COALESCE(SUM(amount), 0) 
-        FROM transactions 
-        WHERE user_id = ? AND type = 'deposit' AND amount > 0
-    ");
+  <?php if (!empty($_SESSION['user_id'])):
+    // Vérifier si l'utilisateur a effectué un dépôt minimum de 1000 FCFA
+    $depositCheckStmt = $pdo->prepare("SELECT COALESCE(SUM(amount), 0) FROM transactions WHERE user_id = ? AND type = 'deposit' AND amount > 0");
     $depositCheckStmt->execute([$_SESSION['user_id']]);
-    $userTotalDeposit = floatval($depositCheckStmt->fetchColumn());
-    $hasDeposited = ($userTotalDeposit >= 1000);
+    $hasDeposited = floatval($depositCheckStmt->fetchColumn()) >= 1000;
     ?>
     <section id="leave-review" style="margin-top:32px">
       <h2>Laisser un avis</h2>
       <?php if (!$hasDeposited): ?>
         <div
-          style="background:linear-gradient(135deg,#fff3cd,#fff9e6);padding:20px;border-radius:12px;border:1px solid #ffc107;margin-bottom:16px">
-          <p style="margin:0 0 12px;color:#856404;font-weight:600">
-            <i class="bi bi-exclamation-triangle me-2"></i>Dépôt requis pour poster un avis
-          </p>
-          <p style="margin:0 0 16px;color:#856404;font-size:14px">
-            Pour garantir la fiabilité des avis, vous devez effectuer un dépôt minimum de <strong>1 000 FCFA</strong> comme
-            preuve de transaction avant de pouvoir publier un avis.
-          </p>
-          <a href="<?= url('index.php?page=wallet') ?>" class="btn btn-animated ripple"
-            style="background:#0066cc;color:white;padding:10px 24px;border-radius:8px;text-decoration:none;display:inline-block">
-            <i class="bi bi-wallet2 me-1"></i>Effectuer un dépôt
-          </a>
+          style="background:linear-gradient(135deg,#fff3cd,#fff);padding:20px;border-radius:12px;border:1px solid #ffc107;margin-bottom:16px">
+          <p style="margin:0 0 8px;font-weight:600;color:#856404"><i class="bi bi-exclamation-triangle me-2"></i>Dépôt
+            requis</p>
+          <p style="margin:0 0 12px;color:#856404">Vous devez effectuer un dépôt minimum de <strong>1 000 FCFA</strong>
+            avant de pouvoir poster un avis. Cela sert de preuve de transaction.</p>
+          <a class="btn btn-animated" href="<?= url('index.php?page=wallet') ?>"
+            style="background:#ffc107;color:#856404;font-weight:600">Effectuer un dépôt →</a>
         </div>
       <?php else: ?>
         <form action="<?= url('actions/review.php') ?>" method="post"

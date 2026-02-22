@@ -56,7 +56,7 @@ try {
     ');
     $initialBalance = 1000; // Bonus de démarrage pour tous
     $stmt->execute([$cau, $name, $phone, 'user', $initialBalance, $my_referral_code, $referrer_id]);
-    $uid = $pdo->lastInsertId('users_id_seq');
+    $uid = $pdo->lastInsertId();
 
     // Transaction pour le nouvel utilisateur
     $pdo->prepare('

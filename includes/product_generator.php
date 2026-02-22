@@ -118,7 +118,7 @@ class ProductGenerator
         try {
             // Si pas de companyId, prendre une entreprise au hasard
             if (!$companyId) {
-                $stmt = $this->db->query("SELECT id FROM companies WHERE is_active = TRUE ORDER BY RANDOM() LIMIT 1");
+                $stmt = $this->db->query("SELECT id FROM companies WHERE is_active = TRUE ORDER BY RAND() LIMIT 1");
                 $companyId = $stmt->fetchColumn();
             }
 
@@ -127,7 +127,7 @@ class ProductGenerator
             }
 
             // Choisir une catégorie au hasard
-            $categoryStmt = $this->db->query("SELECT id, name FROM categories ORDER BY RANDOM() LIMIT 1");
+            $categoryStmt = $this->db->query("SELECT id, name FROM categories ORDER BY RAND() LIMIT 1");
             $category = $categoryStmt->fetch(PDO::FETCH_ASSOC);
 
             if (!$category) {
@@ -170,7 +170,7 @@ class ProductGenerator
                 $image
             ]);
 
-            $productId = $this->db->lastInsertId('products_id_seq');
+            $productId = $this->db->lastInsertId();
 
             return [
                 'success' => true,

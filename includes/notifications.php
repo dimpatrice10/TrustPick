@@ -28,7 +28,7 @@ class NotificationSystem
 
             return [
                 'success' => true,
-                'notification_id' => $this->db->lastInsertId('notifications_id_seq')
+                'notification_id' => $this->db->lastInsertId()
             ];
 
         } catch (Exception $e) {
@@ -52,12 +52,12 @@ class NotificationSystem
                     link,
                     is_read,
                     created_at,
-                    TO_CHAR(created_at, 'DD/MM/YYYY HH24:MI') as formatted_date,
+                    DATE_FORMAT(created_at, '%d/%m/%Y %H:%i') as formatted_date,
                     CASE 
-                        WHEN created_at >= NOW() - INTERVAL '1 hour' THEN 'Il y a quelques minutes'
-                        WHEN created_at >= NOW() - INTERVAL '24 hours' THEN CONCAT('Il y a ', EXTRACT(EPOCH FROM (NOW() - created_at))::int / 3600, 'h')
-                        WHEN created_at >= NOW() - INTERVAL '7 days' THEN CONCAT('Il y a ', EXTRACT(EPOCH FROM (NOW() - created_at))::int / 86400, 'j')
-                        ELSE TO_CHAR(created_at, 'DD/MM/YYYY HH24:MI')
+                        WHEN created_at >= NOW() - INTERVAL 1 HOUR THEN 'Il y a quelques minutes'
+                        WHEN created_at >= NOW() - INTERVAL 24 HOUR THEN CONCAT('Il y a ', FLOOR(TIMESTAMPDIFF(SECOND, created_at, NOW()) / 3600), 'h')
+                        WHEN created_at >= NOW() - INTERVAL 7 DAY THEN CONCAT('Il y a ', FLOOR(TIMESTAMPDIFF(SECOND, created_at, NOW()) / 86400), 'j')
+                        ELSE DATE_FORMAT(created_at, '%d/%m/%Y %H:%i')
                     END as relative_time
                 FROM notifications
                 WHERE user_id = ?
@@ -330,7 +330,7 @@ class NotificationSystem
                 SELECT id 
                 FROM users 
                 WHERE is_active = TRUE AND role = 'user'
-                ORDER BY RANDOM()
+                ORDER BY RAND()
                 LIMIT 100
             ");
             $users = $stmt->fetchAll(PDO::FETCH_COLUMN);

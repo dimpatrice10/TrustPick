@@ -29,6 +29,9 @@ yarn-error.log*
 node_modules
 vendor/
 
+# Environment config (contient les mots de passe)
+.env
+
 # Optional npm cache directory
 .npm
 

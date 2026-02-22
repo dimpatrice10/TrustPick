@@ -1,23 +1,21 @@
 <?php
 /**
  * Classe Database - Singleton pour connexion PDO
+ * Compatible MySQL (InfinityFree/XAMPP) et PostgreSQL (Render)
  */
 class Database
 {
     private static $instance = null;
     private $pdo;
+    private $driver;
 
     private function __construct()
     {
         $config = require __DIR__ . '/config.php';
         try {
-            // Support PostgreSQL (Render) et MySQL (XAMPP local)
-            // Utiliser tp_env() si disponible, sinon getenv() + $_ENV + $_SERVER
-            $hasDbUrl = getenv('DATABASE_URL') || ($_ENV['DATABASE_URL'] ?? '') || ($_SERVER['DATABASE_URL'] ?? '');
-            $hasPgHost = getenv('PGHOST') || ($_ENV['PGHOST'] ?? '') || ($_SERVER['PGHOST'] ?? '');
-            $driver = ($hasDbUrl || $hasPgHost) ? 'pgsql' : 'mysql';
+            $this->driver = $config['db_driver'] ?? 'mysql';
 
-            if ($driver === 'pgsql') {
+            if ($this->driver === 'pgsql') {
                 $port = $config['db_port'] ?? 5432;
                 $dsn = "pgsql:host={$config['db_host']};port={$port};dbname={$config['db_name']}";
                 $options = [
@@ -30,10 +28,12 @@ class Database
                     $dsn .= ";sslmode=require";
                 }
             } else {
-                $dsn = "mysql:host={$config['db_host']};dbname={$config['db_name']};charset=utf8mb4";
+                $port = $config['db_port'] ?? 3306;
+                $dsn = "mysql:host={$config['db_host']};port={$port};dbname={$config['db_name']};charset=utf8mb4";
                 $options = [
                     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                    PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4",
                 ];
             }
 
@@ -56,6 +56,11 @@ class Database
     public function getConnection()
     {
         return $this->pdo;
+    }
+
+    public function getDriver()
+    {
+        return $this->driver;
     }
 }
 

@@ -1,30 +1,44 @@
 <?php
 /**
  * TrustPick V2 - Configuration
- * Lit les variables d'environnement (compatible Docker/Apache/Render)
+ * Compatible MySQL (InfinityFree, XAMPP) et PostgreSQL (Render)
  */
 
 // Charger la fonction tp_env() depuis un fichier séparé (évite les redéclarations)
 require_once __DIR__ . '/env.php';
 
-// Support DATABASE_URL de Render (format: postgresql://user:pass@host:port/dbname)
+// Détection du driver de base de données
+// DATABASE_URL ou PGHOST = PostgreSQL (Render), sinon MySQL (InfinityFree/XAMPP)
 $databaseUrl = tp_env('DATABASE_URL');
 if ($databaseUrl) {
+    // PostgreSQL via DATABASE_URL (Render.com)
     $dbParts = parse_url($databaseUrl);
     $dbHost = $dbParts['host'] ?? '127.0.0.1';
     $dbPort = $dbParts['port'] ?? 5432;
     $dbName = ltrim($dbParts['path'] ?? '/trustpick_v2', '/');
     $dbUser = $dbParts['user'] ?? 'postgres';
     $dbPass = $dbParts['pass'] ?? '';
-} else {
+    $dbDriver = 'pgsql';
+} elseif (tp_env('PGHOST')) {
+    // PostgreSQL explicite
     $dbHost = tp_env('PGHOST', '127.0.0.1');
     $dbPort = tp_env('PGPORT', 5432);
     $dbName = tp_env('PGDATABASE', 'trustpick_v2');
-    $dbUser = tp_env('PGUSER', 'root');
+    $dbUser = tp_env('PGUSER', 'postgres');
     $dbPass = tp_env('PGPASSWORD', '');
+    $dbDriver = 'pgsql';
+} else {
+    // MySQL (InfinityFree / XAMPP / hébergements classiques)
+    $dbHost = tp_env('DB_HOST', tp_env('MYSQL_HOST', '127.0.0.1'));
+    $dbPort = tp_env('DB_PORT', tp_env('MYSQL_PORT', 3306));
+    $dbName = tp_env('DB_NAME', tp_env('MYSQL_DATABASE', 'trustpick_v2'));
+    $dbUser = tp_env('DB_USER', tp_env('MYSQL_USER', 'root'));
+    $dbPass = tp_env('DB_PASS', tp_env('MYSQL_PASSWORD', ''));
+    $dbDriver = 'mysql';
 }
 
 return [
+    'db_driver' => $dbDriver,
     'db_host' => $dbHost,
     'db_name' => $dbName,
     'db_user' => $dbUser,

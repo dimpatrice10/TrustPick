@@ -83,7 +83,7 @@ try {
         SELECT COALESCE(SUM(amount), 0) 
         FROM transactions 
         WHERE user_id = ? AND type IN ('reward', 'referral') 
-        AND created_at >= DATE_TRUNC('month', NOW())
+        AND created_at >= DATE_FORMAT(NOW(), '%Y-%m-01')
     ");
   $monthStmt->execute([$uid]);
   $monthGains = floatval($monthStmt->fetchColumn());

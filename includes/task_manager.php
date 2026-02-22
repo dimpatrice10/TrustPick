@@ -7,7 +7,6 @@
 class TaskManager
 {
     // Ordre des tâches obligatoires (task_code => ordre)
-    // Le dépôt est OBLIGATOIRE en premier (preuve de transaction)
     private static $taskOrder = [
         'deposit_5000' => 1,
         'leave_review' => 2,
@@ -76,7 +75,7 @@ class TaskManager
             'leave_review' => 'Laisser un avis',
             'like_review' => 'Aimer un avis',
             'recommend_product' => 'Recommander un produit',
-            'deposit_5000' => 'Effectuer un dépôt minimum de 1000 FCFA',
+            'deposit_5000' => 'Effectuer un dépôt minimum de 5000 FCFA',
             'daily_login' => 'Connexion quotidienne',
             'invite_user' => 'Inviter un utilisateur'
         ];

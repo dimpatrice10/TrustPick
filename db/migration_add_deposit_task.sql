@@ -1,14 +1,14 @@
 -- =================================================
--- TrustPick V2 - Migration: Ajout tâche dépôt 1000 FCFA
+-- TrustPick V2 - Migration: Ajout tâche dépôt 5000 FCFA
 -- =================================================
 -- Exécuter ce script après le schéma principal
 
 -- Vérifier si la tâche existe déjà avant d'insérer
 INSERT INTO tasks_definitions (task_code, task_name, description, reward_amount, is_daily, is_active)
 SELECT 'deposit_5000', 
-       'Effectuer un dépôt (1 000 FCFA min)', 
-       'Déposez au moins 1 000 FCFA comme preuve de transaction avant de pouvoir poster un avis.',
-       0, -- Pas de récompense directe, c''est une condition
+       'Effectuer un dépôt minimum de 5000 FCFA', 
+       'Déposez au moins 5000 FCFA pour valider cette tâche quotidienne obligatoire.',
+       0, -- Pas de récompense directe, c'est une condition
        TRUE, 
        TRUE
 WHERE NOT EXISTS (

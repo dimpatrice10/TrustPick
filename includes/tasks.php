@@ -217,7 +217,7 @@ class TaskSystem
                     ut.*,
                     td.task_name,
                     td.task_code,
-                    TO_CHAR(ut.completed_at, 'DD/MM/YYYY HH24:MI') as completed_date
+                    DATE_FORMAT(ut.completed_at, '%d/%m/%Y %H:%i') as completed_date
                 FROM user_tasks ut
                 JOIN tasks_definitions td ON ut.task_id = td.id
                 WHERE ut.user_id = ?
@@ -320,7 +320,7 @@ class TaskSystem
 
             return [
                 'success' => true,
-                'task_id' => $this->db->lastInsertId('tasks_definitions_id_seq'),
+                'task_id' => $this->db->lastInsertId(),
                 'message' => 'Tâche créée avec succès'
             ];
 

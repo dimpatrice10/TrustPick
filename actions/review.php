@@ -29,7 +29,7 @@ try {
 
     // Vérifier si l'utilisateur a effectué un dépôt minimum de 1000 FCFA (preuve de transaction)
     $depositCheck = $pdo->prepare("
-        SELECT COALESCE(SUM(amount), 0) as total_deposits 
+        SELECT COALESCE(SUM(amount), 0) 
         FROM transactions 
         WHERE user_id = ? AND type = 'deposit' AND amount > 0
     ");

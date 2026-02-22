@@ -46,7 +46,7 @@ class PaymentManager
     {
         try {
             // Validation - lire le minimum depuis system_settings (DB)
-            $minDeposit = Settings::getInt('min_deposit', 1000);
+            $minDeposit = Settings::getInt('min_deposit', 10);
             if ($amount < $minDeposit) {
                 return [
                     'success' => false,
@@ -74,7 +74,7 @@ class PaymentManager
             ");
             $channel = strtolower($service);
             $stmt->execute([$userId, $reference, $amount, $phone, $channel]);
-            $transactionId = $this->pdo->lastInsertId('payment_transactions_id_seq');
+            $transactionId = $this->pdo->lastInsertId();
 
             // Appeler l'API MeSomb pour collecter le paiement
             $result = $this->makeCollection($amount, $phone, $service, $reference);
@@ -316,7 +316,7 @@ class PaymentManager
             require_once __DIR__ . '/task_manager.php';
             $checkTask = TaskManager::isTaskCompletedToday($userId, 'deposit_5000', $this->pdo);
 
-            if (!$checkTask && $amount >= Settings::getInt('min_deposit', 1000)) {
+            if (!$checkTask && $amount >= Settings::getInt('min_deposit', 10)) {
                 TaskManager::completeTask($userId, 'deposit_5000', $this->pdo);
 
                 // Notification

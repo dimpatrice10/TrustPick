@@ -155,7 +155,7 @@ try {
         if ($review['user_id'] != $user_id) {
             $pdo->prepare("
                 INSERT INTO notifications (user_id, type, title, message, created_at)
-                VALUES (?, 'social', 'Nouveau like', 'Votre avis a reçu un nouveau like !', NOW())
+                VALUES (?, 'system', 'Nouveau like', 'Votre avis a reçu un nouveau like !', NOW())
             ")->execute([$review['user_id']]);
         }
     }

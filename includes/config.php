@@ -44,7 +44,7 @@ return [
             'mtn_money' => tp_env('MTN_ACCOUNT', '683833646')
         ],
 
-        'min_deposit' => 10,
+        'min_deposit' => 1000,
         'currency' => 'XAF'
     ]
 ];

@@ -27,6 +27,20 @@ if (!$product_id || $rating < 1 || $rating > 5) {
 try {
     $pdo = Database::getInstance()->getConnection();
 
+    // Vérifier si l'utilisateur a effectué un dépôt minimum de 1000 FCFA (preuve de transaction)
+    $depositCheck = $pdo->prepare("
+        SELECT COALESCE(SUM(amount), 0) as total_deposits 
+        FROM transactions 
+        WHERE user_id = ? AND type = 'deposit' AND amount > 0
+    ");
+    $depositCheck->execute([$user_id]);
+    $totalDeposits = floatval($depositCheck->fetchColumn());
+
+    if ($totalDeposits < 1000) {
+        addToast('error', 'Vous devez effectuer un dépôt minimum de 1 000 FCFA avant de pouvoir poster un avis. Cela sert de preuve de transaction.');
+        redirect(url('index.php?page=wallet'));
+    }
+
     // Vérifier si l'utilisateur a déjà posté un avis sur ce produit
     $checkStmt = $pdo->prepare('SELECT id FROM reviews WHERE user_id = ? AND product_id = ?');
     $checkStmt->execute([$user_id, $product_id]);
@@ -72,7 +86,7 @@ try {
         // Créer notification
         $stmt = $pdo->prepare("
             INSERT INTO notifications (user_id, title, message, type, created_at)
-            VALUES (?, 'Avis publié', ?, 'success', NOW())
+            VALUES (?, 'Avis publié', ?, 'reward', NOW())
         ");
         $stmt->execute([$user_id, 'Merci pour votre avis ! +' . formatFCFA($reward) . ' crédités.']);
 
@@ -82,7 +96,7 @@ try {
         // Avis publié mais pas de récompense (tâches précédentes non complétées)
         $stmt = $pdo->prepare("
             INSERT INTO notifications (user_id, title, message, type, created_at)
-            VALUES (?, 'Avis publié', ?, 'info', NOW())
+            VALUES (?, 'Avis publié', ?, 'system', NOW())
         ");
         $stmt->execute([$user_id, 'Votre avis a été publié. ' . $canExecute['message']]);
 

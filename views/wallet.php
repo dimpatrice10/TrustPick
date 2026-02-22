@@ -19,7 +19,7 @@ if (empty($_SESSION['user_id'])) {
 $uid = intval($_SESSION['user_id']);
 
 // Paramètres dynamiques
-$minDeposit = Settings::getInt('min_deposit', 10);
+$minDeposit = Settings::getInt('min_deposit', 1000);
 $minWithdrawal = Settings::getInt('min_withdrawal', 5000);
 
 // Solde actuel

@@ -28,7 +28,7 @@ $recentUsers = $pdo->query('SELECT id, cau, name, role, created_at FROM users OR
 $companies = $pdo->query('SELECT id, name, slug, is_active, created_at FROM companies ORDER BY created_at DESC LIMIT 10')->fetchAll();
 
 // Paramètres système
-$settingsMinDeposit = Settings::getInt('min_deposit', 10);
+$settingsMinDeposit = Settings::getInt('min_deposit', 1000);
 $settingsMinWithdrawal = Settings::getInt('min_withdrawal', 5000);
 $settingsReviewReward = Settings::getInt('review_reward', 500);
 $settingsReferralReward = Settings::getInt('referral_reward', 5000);
@@ -199,14 +199,15 @@ $topTransactions = $pdo->query('
                         <div class="row g-3">
                             <!-- Paiements -->
                             <div class="col-12">
-                                <h6 class="text-primary mb-3"><i class="bi bi-wallet2 me-1"></i>Paiements & Portefeuille</h6>
+                                <h6 class="text-primary mb-3"><i class="bi bi-wallet2 me-1"></i>Paiements & Portefeuille
+                                </h6>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label small fw-bold">Dépôt minimum (FCFA)</label>
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="bi bi-arrow-down-circle"></i></span>
-                                    <input type="number" name="min_deposit" class="form-control" 
-                                           value="<?= $settingsMinDeposit ?>" min="1" required>
+                                    <input type="number" name="min_deposit" class="form-control"
+                                        value="<?= $settingsMinDeposit ?>" min="1" required>
                                     <span class="input-group-text">FCFA</span>
                                 </div>
                                 <div class="form-text">Montant minimum pour un dépôt Mobile Money</div>
@@ -215,8 +216,8 @@ $topTransactions = $pdo->query('
                                 <label class="form-label small fw-bold">Retrait minimum (FCFA)</label>
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="bi bi-arrow-up-circle"></i></span>
-                                    <input type="number" name="min_withdrawal" class="form-control" 
-                                           value="<?= $settingsMinWithdrawal ?>" min="1" required>
+                                    <input type="number" name="min_withdrawal" class="form-control"
+                                        value="<?= $settingsMinWithdrawal ?>" min="1" required>
                                     <span class="input-group-text">FCFA</span>
                                 </div>
                                 <div class="form-text">Montant minimum pour une demande de retrait</div>
@@ -238,8 +239,8 @@ $topTransactions = $pdo->query('
                                 <label class="form-label small fw-bold">Récompense par avis (FCFA)</label>
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="bi bi-star"></i></span>
-                                    <input type="number" name="review_reward" class="form-control" 
-                                           value="<?= $settingsReviewReward ?>" min="0" required>
+                                    <input type="number" name="review_reward" class="form-control"
+                                        value="<?= $settingsReviewReward ?>" min="0" required>
                                     <span class="input-group-text">FCFA</span>
                                 </div>
                                 <div class="form-text">Montant gagné par avis validé</div>
@@ -248,8 +249,8 @@ $topTransactions = $pdo->query('
                                 <label class="form-label small fw-bold">Récompense parrainage (FCFA)</label>
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="bi bi-people"></i></span>
-                                    <input type="number" name="referral_reward" class="form-control" 
-                                           value="<?= $settingsReferralReward ?>" min="0" required>
+                                    <input type="number" name="referral_reward" class="form-control"
+                                        value="<?= $settingsReferralReward ?>" min="0" required>
                                     <span class="input-group-text">FCFA</span>
                                 </div>
                                 <div class="form-text">Montant gagné par parrainage réussi</div>
@@ -263,8 +264,8 @@ $topTransactions = $pdo->query('
                                 <label class="form-label small fw-bold">Notifications / jour</label>
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="bi bi-bell"></i></span>
-                                    <input type="number" name="daily_notifications_count" class="form-control" 
-                                           value="<?= $settingsDailyNotif ?>" min="0" required>
+                                    <input type="number" name="daily_notifications_count" class="form-control"
+                                        value="<?= $settingsDailyNotif ?>" min="0" required>
                                 </div>
                                 <div class="form-text">Nombre de notifications quotidiennes</div>
                             </div>
@@ -272,8 +273,8 @@ $topTransactions = $pdo->query('
                                 <label class="form-label small fw-bold">Fréq. génération produits</label>
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="bi bi-box-seam"></i></span>
-                                    <input type="number" name="products_generation_frequency" class="form-control" 
-                                           value="<?= $settingsProdGenFreq ?>" min="1" required>
+                                    <input type="number" name="products_generation_frequency" class="form-control"
+                                        value="<?= $settingsProdGenFreq ?>" min="1" required>
                                 </div>
                                 <div class="form-text">Nombre de générations / jour</div>
                             </div>

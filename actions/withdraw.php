@@ -59,7 +59,7 @@ try {
     // Créer notification
     $stmt = $pdo->prepare("
         INSERT INTO notifications (user_id, title, message, type, created_at)
-        VALUES (?, 'Retrait demandé', ?, 'info', NOW())
+        VALUES (?, 'Retrait demandé', ?, 'withdrawal', NOW())
     ");
     $msg = 'Votre demande de retrait de ' . formatFCFA($amount) . ' est en cours de traitement.';
     $stmt->execute([$_SESSION['user_id'], $msg]);

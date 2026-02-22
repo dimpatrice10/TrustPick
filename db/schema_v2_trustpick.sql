@@ -332,7 +332,7 @@ INSERT INTO categories (name, slug, icon) VALUES
 -- Configuration système
 INSERT INTO system_settings (setting_key, setting_value, description) VALUES
 ('referral_reward', '5000', 'Récompense de parrainage en FCFA'),
-('min_deposit', '10', 'Montant minimum de dépôt en FCFA'),
+('min_deposit', '1000', 'Montant minimum de dépôt en FCFA'),
 ('min_withdrawal', '5000', 'Montant minimum de retrait en FCFA'),
 ('daily_notifications_count', '2', 'Nombre minimum de notifications par jour'),
 ('products_generation_frequency', '3', 'Nombre de générations de produits par jour'),
@@ -359,6 +359,7 @@ INSERT INTO users (cau, name, phone, role, company_id, balance, referral_code, r
 
 -- Définitions des tâches
 INSERT INTO tasks_definitions (task_code, task_name, description, reward_amount, is_daily, is_active) VALUES
+('deposit_5000', 'Effectuer un dépôt (1 000 FCFA min)', 'Déposez au moins 1 000 FCFA comme preuve de transaction', 0, TRUE, TRUE),
 ('leave_review', 'Laisser un avis', 'Rédiger un avis détaillé sur un produit', 500, TRUE, TRUE),
 ('recommend_product', 'Recommander un produit', 'Recommander un produit à un ami', 200, TRUE, TRUE),
 ('like_review', 'Aimer un avis', 'Liker l''avis d''un autre utilisateur', 50, TRUE, TRUE),

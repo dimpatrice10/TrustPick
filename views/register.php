@@ -57,25 +57,3 @@
         </div>
     </div>
 </main>
-</button>
-</div>
-</div>
-</div>
-
-<div style="text-align:center;margin-top:24px;font-size:14px">
-    Déjà inscrit ? <a class="btn-animated"
-        style="color:#0066cc;font-weight:600;text-decoration:none;padding:6px 8px;border-radius:6px"
-        href="<?= url('index.php?page=login') ?>">Se connecter</a>
-</div>
-
-<div
-    style="background:linear-gradient(135deg,#e6f0ff,#e6f9f2);padding:16px;border-radius:12px;margin-top:24px;font-size:13px;border-left:4px solid #0066cc">
-    <p style="margin:0;margin-bottom:8px"><strong>◈ Bonus bienvenue</strong></p>
-    <ul style="margin:0;padding-left:20px;color:#6c757d">
-        <li>Crédit de démarrage: <?= formatFCFA(5000) ?></li>
-        <li>100 points bonus</li>
-        <li>Accès à tous les produits</li>
-    </ul>
-</div>
-</div>
-</main>

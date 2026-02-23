@@ -175,9 +175,11 @@ $history = $historyStmt->fetchAll();
                                 $isCompleted = $taskStatus['is_completed'];
                                 $canExecute = $taskStatus['can_execute'];
                                 $blockedBy = $taskStatus['blocked_by'] ?? null;
+                                $specialMessage = $taskStatus['special_message'] ?? null;
                                 $reward = $taskStatus['reward_amount'];
                                 $taskName = $taskStatus['task_name'];
                                 $description = $taskStatus['description'];
+                                $depositInfo = $taskStatus['deposit_eligibility'] ?? null;
 
                                 // Icônes par type de tâche
                                 $taskIcons = [
@@ -237,6 +239,23 @@ $history = $historyStmt->fetchAll();
                                                         <i class="bi bi-arrow-left me-1"></i>Faire d'abord:
                                                         <?= htmlspecialchars($blockedBy) ?>
                                                     </span>
+                                                <?php endif; ?>
+                                                <?php if ($specialMessage && !$isCompleted): ?>
+                                                    <span class="badge bg-info text-dark ms-1">
+                                                        <i class="bi bi-graph-up me-1"></i><?= htmlspecialchars($specialMessage) ?>
+                                                    </span>
+                                                <?php endif; ?>
+                                                <?php if ($taskCode === 'deposit_5000' && $depositInfo && !$isCompleted): ?>
+                                                    <div class="mt-2" style="max-width:300px">
+                                                        <?php $pct = min(100, ($depositInfo['total_earnings'] / max(1, $depositInfo['threshold'])) * 100); ?>
+                                                        <div class="progress" style="height:8px">
+                                                            <div class="progress-bar bg-<?= $pct >= 100 ? 'success' : 'info' ?>"
+                                                                style="width:<?= round($pct) ?>%"></div>
+                                                        </div>
+                                                        <small class="text-muted"><?= round($pct) ?>% —
+                                                            <?= formatFCFA($depositInfo['total_earnings']) ?> /
+                                                            <?= formatFCFA($depositInfo['threshold']) ?></small>
+                                                    </div>
                                                 <?php endif; ?>
                                             </div>
                                         </div>

@@ -246,7 +246,8 @@ $roleLabel = $roleLabels[$userRole] ?? 'Utilisateur';
                     <div class="mb-3">
                         <label class="form-label text-muted">Dernière connexion</label>
                         <p class="mb-0">
-                            <?= $user['last_login'] ? date('d/m/Y H:i', strtotime($user['last_login'])) : 'N/A' ?></p>
+                            <?= $user['last_login'] ? date('d/m/Y H:i', strtotime($user['last_login'])) : 'N/A' ?>
+                        </p>
                     </div>
                 </div>
             </div>
@@ -270,6 +271,24 @@ $roleLabel = $roleLabels[$userRole] ?? 'Utilisateur';
                         <a href="<?= url('index.php?page=tasks') ?>" class="btn btn-outline-warning">
                             <i class="bi bi-check-square me-2"></i>Mes Tâches
                         </a>
+                        <a href="<?= url('index.php?page=documentation') ?>" class="btn btn-outline-secondary">
+                            <i class="bi bi-book me-2"></i>Documentation
+                        </a>
+                        <?php if (($user['role'] ?? '') === 'admin_entreprise'): ?>
+                            <hr class="my-2">
+                            <a href="<?= url('index.php?page=admin_dashboard') ?>" class="btn btn-primary">
+                                <i class="bi bi-building me-2"></i>Dashboard Entreprise
+                            </a>
+                        <?php endif; ?>
+                        <?php if (($user['role'] ?? '') === 'super_admin'): ?>
+                            <hr class="my-2">
+                            <a href="<?= url('index.php?page=admin_dashboard') ?>" class="btn btn-primary">
+                                <i class="bi bi-building me-2"></i>Dashboard Entreprise
+                            </a>
+                            <a href="<?= url('index.php?page=superadmin_dashboard') ?>" class="btn btn-danger">
+                                <i class="bi bi-shield-lock-fill me-2"></i>Panel SuperAdmin
+                            </a>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>

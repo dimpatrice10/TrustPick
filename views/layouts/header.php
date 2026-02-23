@@ -8,6 +8,12 @@ require_once __DIR__ . '/../../includes/url.php';
 require_once __DIR__ . '/../../includes/db.php';
 require_once __DIR__ . '/../../includes/helpers.php';
 
+// Auto-compléter la connexion quotidienne pour l'utilisateur connecté
+if (!empty($_SESSION['user_id'])) {
+  require_once __DIR__ . '/../../includes/task_manager.php';
+  TaskManager::autoCompleteLogin(intval($_SESSION['user_id']), $pdo);
+}
+
 // Récupérer les toasts pour affichage
 $toasts = getToasts();
 ?>
@@ -54,6 +60,7 @@ $toasts = getToasts();
   <link rel="stylesheet" href="<?= url('assets/css/demo.css') ?>">
   <link rel="stylesheet" href="<?= url('assets/css/app.css') ?>">
   <link rel="stylesheet" href="<?= url('assets/css/ui-enhancements.css') ?>">
+  <link rel="stylesheet" href="<?= url('assets/css/modern.css') ?>">
 
   <!-- api-client.js removed: not present in assets; avoid 404 that returns HTML -->
 
@@ -94,45 +101,40 @@ $toasts = getToasts();
   <?php endif; ?>
   <header class="tp-header" role="banner">
     <div class="container header-inner">
+      <?php
+      // Requête unique pour l'utilisateur connecté
+      $me = null;
+      if (!empty($_SESSION['user_id'])) {
+        try {
+          $uSt = $pdo->prepare('SELECT u.id, u.name, u.role, COALESCE(u.balance,0) AS balance FROM users u WHERE u.id = ? LIMIT 1');
+          $uSt->execute([$_SESSION['user_id']]);
+          $me = $uSt->fetch();
+        } catch (Exception $e) {
+          $me = null;
+        }
+      }
+      ?>
       <a class="logo" href="<?= url('index.php?page=home') ?>" aria-label="TrustPick accueil"
         style="display:flex;align-items:center;gap:8px">
         <img src="<?= url('assets/img/logo.png') ?>" alt="TrustPick Logo" style="height:40px;width:auto">
-        <!-- <span style="font-weight:800;font-family:Poppins;font-size:18px;background:linear-gradient(135deg,#0066cc,#1ab991);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">TrustPick</span> -->
-        <?php if (!empty($_SESSION['user_id'])):
-          try {
-            $uSt = $pdo->prepare('SELECT u.id,u.name, COALESCE(u.balance,0) AS balance FROM users u WHERE u.id = ? LIMIT 1');
-            $uSt->execute([$_SESSION['user_id']]);
-            $me = $uSt->fetch();
-          } catch (Exception $e) {
-            $me = null;
-          }
-          ?>
+        <?php if ($me): ?>
           <div style="font-size:13px;color:#6c757d">Solde: <strong
-              style="color:#0066cc"><?= isset($me['balance']) ? number_format($me['balance'], 0, ',', ' ') . ' FCFA' : '—' ?></strong>
+              style="color:#0066cc"><?= number_format($me['balance'], 0, ',', ' ') . ' FCFA' ?></strong>
           </div>
         <?php endif; ?>
       </a>
-      <!-- <div class="search-wrap">
-        <input class="search" type="search" placeholder="Rechercher un produit, marque, entreprise..."
-          aria-label="Rechercher">
-        <button class="search-btn" aria-label="Lancer la recherche">🔎</button>
-      </div> -->
       <nav class="tp-nav" role="navigation" aria-label="Navigation principale">
         <a class="nav-link" href="<?= url('index.php?page=catalog') ?>">Catalogue</a>
         <a class="nav-link" href="<?= url('index.php?page=company') ?>">Entreprises</a>
-        <?php if (!empty($_SESSION['user_id'])):
-          try {
-            $uSt = $pdo->prepare('SELECT u.id,u.name, COALESCE(u.balance,0) AS balance FROM users u WHERE u.id = ? LIMIT 1');
-            $uSt->execute([$_SESSION['user_id']]);
-            $me = $uSt->fetch();
-          } catch (Exception $e) {
-            $me = null;
-          }
-          ?>
+        <?php if ($me): ?>
           <div style="display:flex;align-items:center;gap:12px">
-            <!-- <div style="font-size:14px;color:#1a1f36">Bonjour,
-              <strong><?= htmlspecialchars($me['name'] ?? 'Utilisateur') ?></strong>
-            </div> -->
+            <?php if (($me['role'] ?? '') === 'super_admin'): ?>
+              <a class="nav-link nav-icon" style="margin:0 6px;color:#dc3545"
+                href="<?= url('index.php?page=superadmin_dashboard') ?>" title="Panel SuperAdmin"
+                aria-label="Panel SuperAdmin">
+                <i class="bi bi-shield-lock-fill" style="font-size:18px"></i>
+              </a>
+            <?php endif; ?>
             <!-- Mon compte -->
             <a class="nav-link nav-icon" style="margin: 0px 10px;" href="<?= url('index.php?page=user_dashboard') ?>"
               title="Mon compte" aria-label="Mon compte">
@@ -175,7 +177,6 @@ $toasts = getToasts();
 
   <!-- Injecter les toasts PHP pour JavaScript -->
   <script>
-    document.body.setAttribute('data-toasts', '<?= addslashes(json_encode($toasts)) ?>');
+    document.body.setAttribute('data-toasts', '<?= json_encode($toasts, JSON_HEX_APOS | JSON_HEX_QUOT) ?>');
   </script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="<?= url('assets/js/notifications.js') ?>"></script>

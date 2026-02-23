@@ -10,7 +10,7 @@ if (session_status() === PHP_SESSION_NONE)
   session_start();
 
 // Vérifier authentification admin entreprise
-$role = $_SESSION['role'] ?? $_SESSION['user_role'] ?? '';
+$role = $_SESSION['user_role'] ?? '';
 if (empty($_SESSION['user_id']) || !in_array($role, ['admin_entreprise', 'super_admin'])) {
   $_SESSION['error'] = 'Accès réservé aux administrateurs d\'entreprise.';
   header('Location: ' . url('index.php?page=login'));

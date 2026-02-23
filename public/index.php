@@ -38,6 +38,9 @@ $allowed = [
     'manage_withdrawals',
     'system_stats',
 
+    // Documentation
+    'documentation',
+
     // Erreurs
     '404',
     '403'

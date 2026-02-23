@@ -36,22 +36,22 @@ $topProducts = $pdo->query('SELECT * FROM products ORDER BY created_at DESC LIMI
     <div class="hero-stats" style="margin-top:56px;position:relative;z-index:1">
       <div class="stat-box glow">
         <strong
-          style="background:linear-gradient(135deg,#0066cc,#1ab991);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text"><?= number_format($userCount * 1979) ?></strong>
+          style="background:linear-gradient(135deg,#0066cc,#1ab991);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text"><?= number_format($userCount) ?></strong>
         <p>Utilisateurs vérifiés</p>
       </div>
       <div class="stat-box glow">
         <strong
-          style="background:linear-gradient(135deg,#1ab991,#0066cc);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text"><?= number_format($productCount * 100043) ?></strong>
+          style="background:linear-gradient(135deg,#1ab991,#0066cc);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text"><?= number_format($productCount) ?></strong>
         <p>Produits catalogués</p>
       </div>
       <div class="stat-box glow">
         <strong
-          style="background:linear-gradient(135deg,#f59e0b,#ef4444);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text"><?= number_format($reviewCount * 19700) ?></strong>
+          style="background:linear-gradient(135deg,#f59e0b,#ef4444);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text"><?= number_format($reviewCount) ?></strong>
         <p>Avis authentiques</p>
       </div>
       <div class="stat-box glow">
         <strong
-          style="background:linear-gradient(135deg,#ef4444,#f59e0b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text"><?= number_format($redistributed * 19707) ?>
+          style="background:linear-gradient(135deg,#ef4444,#f59e0b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text"><?= number_format($redistributed) ?>
           FCFA</strong>
         <p>Redistribués aux users</p>
       </div>
@@ -120,7 +120,8 @@ $topProducts = $pdo->query('SELECT * FROM products ORDER BY created_at DESC LIMI
       style="position:absolute;bottom:-80px;left:-80px;width:250px;height:250px;background:radial-gradient(circle,rgba(255,255,255,0.15),transparent);border-radius:50%">
     </div>
     <div style="position:relative;z-index:1">
-      <h2 style="color:white;margin-bottom:16px;font-size:36px">Rejoignez 4,840 utilisateurs gagnants</h2>
+      <h2 style="color:white;margin-bottom:16px;font-size:36px">Rejoignez <?= number_format($userCount) ?> utilisateurs
+        gagnants</h2>
       <p style="color:rgba(255,255,255,0.95);margin:0 0 28px;font-size:17px">Évaluez les produits que vous aimez. Gagnez
         de l'argent réel. Pas d'engagement, zéro risque.</p>
       <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap">

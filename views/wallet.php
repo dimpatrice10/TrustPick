@@ -77,8 +77,7 @@ $withdrawals = $pdo->prepare('SELECT * FROM withdrawals WHERE user_id = ? ORDER 
 $withdrawals->execute([$uid]);
 $withdrawals = $withdrawals->fetchAll();
 
-// Montant minimum de retrait
-$minWithdrawal = 30000;
+// Le minWithdrawal dynamique est déjà chargé via Settings::getInt() ligne 24
 $canWithdraw = $balance >= $minWithdrawal;
 ?>
 

@@ -23,7 +23,7 @@ try {
 $hasStock = false;
 $hasEco = false;
 try {
-  $colStmt = $pdo->prepare("SELECT column_name FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'products' AND column_name IN ('stock','is_eco')");
+  $colStmt = $pdo->prepare("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'products' AND COLUMN_NAME IN ('stock','is_eco')");
   $colStmt->execute();
   $cols = $colStmt->fetchAll(PDO::FETCH_COLUMN);
   $hasStock = in_array('stock', $cols, true);
@@ -56,21 +56,21 @@ if (!empty($_GET['price'])) {
   switch ($_GET['price']) {
     case 'lt50':
       $where[] = 'p.price < ?';
-      $params[] = 50;
+      $params[] = 25000;
       break;
     case '50-100':
       $where[] = 'p.price BETWEEN ? AND ?';
-      $params[] = 50;
-      $params[] = 100;
+      $params[] = 25000;
+      $params[] = 50000;
       break;
     case '100-250':
       $where[] = 'p.price BETWEEN ? AND ?';
-      $params[] = 100;
-      $params[] = 250;
+      $params[] = 50000;
+      $params[] = 125000;
       break;
     case 'gt250':
       $where[] = 'p.price > ?';
-      $params[] = 250;
+      $params[] = 125000;
       break;
   }
 }
@@ -123,7 +123,7 @@ $off = intval($offset);
 // main products query with subqueries for metrics
 $hasReco = false;
 try {
-  $chk = $pdo->prepare("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name = ?");
+  $chk = $pdo->prepare("SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?");
   $chk->execute(['recommendations']);
   $hasReco = intval($chk->fetchColumn()) > 0;
 } catch (Exception $e) {

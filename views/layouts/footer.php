@@ -7,7 +7,7 @@
     <nav class="footer-nav">
       <a href="<?= url('index.php?page=home') ?>">Accueil</a>
       <a href="<?= url('index.php?page=catalog') ?>">Catalogue</a>
-      <a href="<?= url('index.php?page=login') ?>">Aide</a>
+      <a href="<?= url('index.php?page=documentation') ?>">Aide</a>
       <!-- Bouton d'installation PWA -->
       <button id="pwa-install-btn" class="pwa-install-btn footer-install-btn" style="display:none">
         <i class="bi bi-download"></i>

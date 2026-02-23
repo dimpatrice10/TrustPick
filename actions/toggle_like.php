@@ -69,8 +69,6 @@ try {
         $useReviewLikes = false;
     }
 
-    $pdo->beginTransaction();
-
     if ($useReviewLikes) {
         // Utiliser review_likes (table simple)
         $checkStmt = $pdo->prepare('SELECT id FROM review_likes WHERE user_id = ? AND review_id = ?');
@@ -130,25 +128,13 @@ try {
         $canExecute = TaskManager::canExecuteTask($user_id, 'like_review', $pdo);
 
         if ($canExecute['can_execute']) {
-            $reward = 200;
-
-            $pdo->prepare('UPDATE users SET balance = balance + ? WHERE id = ?')
-                ->execute([$reward, $user_id]);
-
-            $balanceStmt = $pdo->prepare('SELECT balance FROM users WHERE id = ?');
-            $balanceStmt->execute([$user_id]);
-            $newBalance = $balanceStmt->fetchColumn();
-
-            $pdo->prepare("
-                INSERT INTO transactions (user_id, type, amount, description, reference_type, balance_after, created_at)
-                VALUES (?, 'reward', ?, 'Tâche: Aimer un avis', 'like_review', ?, NOW())
-            ")->execute([$user_id, $reward, $newBalance]);
-
-            TaskManager::completeTask($user_id, 'like_review', $pdo);
-
-            $_SESSION['balance'] = $newBalance;
-
-            $rewardMessage = ' +' . formatFCFA($reward) . ' crédités !';
+            // Déléguer la récompense à TaskManager
+            $result = TaskManager::completeTask($user_id, 'like_review', $pdo);
+            
+            if ($result['success']) {
+                $reward = 100; // Mettre à jour selon TaskManager
+                $rewardMessage = ' +' . formatFCFA($reward) . ' crédités !';
+            }
         }
 
         // Notification pour l'auteur de l'avis
@@ -159,8 +145,6 @@ try {
             ")->execute([$review['user_id']]);
         }
     }
-
-    $pdo->commit();
 
     // Récupérer le nouveau nombre de likes
     $countStmt = $pdo->prepare('SELECT likes_count FROM reviews WHERE id = ?');
@@ -177,9 +161,6 @@ try {
     ]);
 
 } catch (Exception $e) {
-    if (isset($pdo) && $pdo->inTransaction()) {
-        $pdo->rollBack();
-    }
     echo json_encode([
         'status' => 'error',
         'message' => 'Erreur: ' . $e->getMessage()

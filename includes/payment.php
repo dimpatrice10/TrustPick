@@ -312,24 +312,25 @@ class PaymentManager
                 WHERE id = ?
             ")->execute([$transactionId]);
 
-            // Vérifier et compléter la tâche quotidienne
+            $this->pdo->commit();
+
+            // Vérifier et compléter la tâche quotidienne (séparément)
             require_once __DIR__ . '/task_manager.php';
             $checkTask = TaskManager::isTaskCompletedToday($userId, 'deposit_5000', $this->pdo);
 
             if (!$checkTask && $amount >= Settings::getInt('min_deposit', 10)) {
-                TaskManager::completeTask($userId, 'deposit_5000', $this->pdo);
-
-                // Notification
+                $result = TaskManager::completeTask($userId, 'deposit_5000', $this->pdo);
+                
+                // Notification de dépôt (indépendante de la tâche)
                 $this->pdo->prepare("
                     INSERT INTO notifications (user_id, type, title, message, created_at)
-                    VALUES (?, 'reward', 'Dépôt validé', ?, NOW())
+                    VALUES (?, 'deposit', 'Dépôt validé', ?, NOW())
                 ")->execute([
                             $userId,
-                            'Votre dépôt de ' . formatFCFA($amount) . ' a été crédité. Tâche quotidienne validée !'
+                            'Votre dépôt de ' . formatFCFA($amount) . ' a été crédité.' . ($result['success'] ? ' Tâche quotidienne validée !' : '')
                         ]);
             }
 
-            $this->pdo->commit();
             return true;
 
         } catch (Exception $e) {

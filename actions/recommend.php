@@ -59,60 +59,31 @@ try {
         redirect(url('index.php?page=product&id=' . $product_id));
     }
 
-    // Vérifier si l'utilisateur peut exécuter cette tâche (ordre respecté)
-    $canExecute = TaskManager::canExecuteTask($user_id, 'recommend_product', $pdo);
-
-    $pdo->beginTransaction();
-
-    // Enregistrer la recommandation
+    // Enregistrer la recommandation (toujours autorisée)
     $stmt = $pdo->prepare('
         INSERT INTO recommendations (product_id, recommender_id, recommended_to_id, message, created_at)
         VALUES (?, ?, ?, ?, NOW())
     ');
     $stmt->execute([$product_id, $user_id, $user_id, $contact_info]);
 
-    $reward = 200;
+    // Vérifier si l'utilisateur peut recevoir la récompense
+    $canExecute = TaskManager::canExecuteTask($user_id, 'recommend_product', $pdo);
 
     if ($canExecute['can_execute']) {
-        // Créditer la récompense
-        $pdo->prepare('UPDATE users SET balance = balance + ? WHERE id = ?')
-            ->execute([$reward, $user_id]);
+        // Déléguer la récompense à TaskManager
+        $result = TaskManager::completeTask($user_id, 'recommend_product', $pdo);
 
-        // Récupérer nouveau solde
-        $balanceStmt = $pdo->prepare('SELECT balance FROM users WHERE id = ?');
-        $balanceStmt->execute([$user_id]);
-        $newBalance = $balanceStmt->fetchColumn();
-
-        // Enregistrer la transaction
-        $pdo->prepare("
-            INSERT INTO transactions (user_id, type, amount, description, reference_type, balance_after, created_at)
-            VALUES (?, 'reward', ?, ?, 'recommendation', ?, NOW())
-        ")->execute([$user_id, $reward, 'Recommandation produit: ' . $product['title'], $newBalance]);
-
-        // Mettre à jour la session
-        $_SESSION['balance'] = $newBalance;
-
-        // Compléter la tâche
-        TaskManager::completeTask($user_id, 'recommend_product', $pdo);
-
-        // Créer notification
-        $pdo->prepare("
-            INSERT INTO notifications (user_id, type, title, message, created_at)
-            VALUES (?, 'reward', 'Recommandation envoyée', ?, NOW())
-        ")->execute([$user_id, 'Vous avez recommandé "' . $product['title'] . '" et gagné ' . formatFCFA($reward) . ' !']);
-
-        addToast('success', 'Produit recommandé avec succès ! +' . formatFCFA($reward) . ' crédités.');
+        if ($result['success']) {
+            addToast('success', 'Produit recommandé avec succès ! +' . formatFCFA(250) . ' crédités.');
+        } else {
+            addToast('success', 'Produit recommandé avec succès !');
+        }
     } else {
-        // Recommandation enregistrée mais pas de récompense
-        addToast('warning', $canExecute['message']);
+        // Recommandation enregistrée mais sans récompense
+        addToast('success', 'Produit recommandé ! ' . $canExecute['message']);
     }
-
-    $pdo->commit();
 
 } catch (Exception $e) {
-    if (isset($pdo) && $pdo->inTransaction()) {
-        $pdo->rollBack();
-    }
     addToast('error', 'Erreur: ' . $e->getMessage());
 }
 

@@ -54,8 +54,6 @@ try {
     $checkStmt->execute([$user_id, $review_id]);
     $existingReaction = $checkStmt->fetch();
 
-    $pdo->beginTransaction();
-
     if ($existingReaction) {
         if ($existingReaction['reaction_type'] === $reaction) {
             // Supprimer la réaction
@@ -65,7 +63,6 @@ try {
             $countColumn = $reaction === 'like' ? 'likes_count' : 'dislikes_count';
             $pdo->prepare("UPDATE reviews SET $countColumn = GREATEST($countColumn - 1, 0) WHERE id = ?")->execute([$review_id]);
 
-            $pdo->commit();
             echo json_encode(['success' => true, 'action' => 'removed', 'message' => 'Réaction retirée.']);
             exit;
         } else {
@@ -80,13 +77,12 @@ try {
                 $pdo->prepare('UPDATE reviews SET dislikes_count = dislikes_count + 1, likes_count = GREATEST(likes_count - 1, 0) WHERE id = ?')->execute([$review_id]);
             }
 
-            $pdo->commit();
             echo json_encode(['success' => true, 'action' => 'changed', 'message' => 'Réaction modifiée.']);
             exit;
         }
     }
 
-    // Nouvelle réaction
+    // Nouvelle réaction (toujours autorisée)
     $pdo->prepare('INSERT INTO review_reactions (review_id, user_id, reaction_type, created_at) VALUES (?, ?, ?, NOW())')
         ->execute([$review_id, $user_id, $reaction]);
 
@@ -95,50 +91,30 @@ try {
     $pdo->prepare("UPDATE reviews SET $countColumn = $countColumn + 1 WHERE id = ?")->execute([$review_id]);
 
     // Vérifier si l'utilisateur peut recevoir la récompense pour la tâche like_review
-    $canExecute = TaskManager::canExecuteTask($user_id, 'like_review', $pdo);
-    $reward = 50;
+    if ($reaction === 'like') {
+        $canExecute = TaskManager::canExecuteTask($user_id, 'like_review', $pdo);
 
-    if ($canExecute['can_execute'] && $reaction === 'like') {
-        // Créditer la récompense
-        $pdo->prepare('UPDATE users SET balance = balance + ? WHERE id = ?')
-            ->execute([$reward, $user_id]);
+        if ($canExecute['can_execute']) {
+            // Déléguer la récompense à TaskManager
+            $result = TaskManager::completeTask($user_id, 'like_review', $pdo);
 
-        // Récupérer nouveau solde
-        $balanceStmt = $pdo->prepare('SELECT balance FROM users WHERE id = ?');
-        $balanceStmt->execute([$user_id]);
-        $newBalance = $balanceStmt->fetchColumn();
-
-        // Enregistrer la transaction
-        $pdo->prepare("
-            INSERT INTO transactions (user_id, type, amount, description, reference_type, balance_after, created_at)
-            VALUES (?, 'reward', ?, 'Like sur un avis', 'like_review', ?, NOW())
-        ")->execute([$user_id, $reward, $newBalance]);
-
-        // Compléter la tâche
-        TaskManager::completeTask($user_id, 'like_review', $pdo);
-
-        // Mettre à jour la session
-        $_SESSION['balance'] = $newBalance;
-
-        $pdo->commit();
-        echo json_encode([
-            'success' => true,
-            'action' => 'added',
-            'message' => 'Avis liké ! +' . formatFCFA($reward) . ' crédités.',
-            'reward' => $reward
-        ]);
-    } else {
-        $pdo->commit();
-        $msg = $reaction === 'like' ? 'Avis liké !' : 'Avis disliké !';
-        if (!$canExecute['can_execute'] && $reaction === 'like') {
-            $msg .= ' (Pas de récompense: ' . $canExecute['message'] . ')';
+            if ($result['success']) {
+                echo json_encode([
+                    'success' => true,
+                    'action' => 'added',
+                    'message' => 'Avis liké ! +' . formatFCFA(100) . ' crédités.',
+                    'reward' => 100
+                ]);
+            } else {
+                echo json_encode(['success' => true, 'action' => 'added', 'message' => 'Avis liké !']);
+            }
+        } else {
+            echo json_encode(['success' => true, 'action' => 'added', 'message' => 'Avis liké ! (Pas de récompense: ' . $canExecute['message'] . ')']);
         }
-        echo json_encode(['success' => true, 'action' => 'added', 'message' => $msg]);
+    } else {
+        echo json_encode(['success' => true, 'action' => 'added', 'message' => 'Avis disliké !']);
     }
 
 } catch (Exception $e) {
-    if (isset($pdo) && $pdo->inTransaction()) {
-        $pdo->rollBack();
-    }
     echo json_encode(['success' => false, 'message' => 'Erreur: ' . $e->getMessage()]);
 }

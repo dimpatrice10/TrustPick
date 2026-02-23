@@ -130,7 +130,7 @@ try {
         if ($canExecute['can_execute']) {
             // Déléguer la récompense à TaskManager
             $result = TaskManager::completeTask($user_id, 'like_review', $pdo);
-            
+
             if ($result['success']) {
                 $reward = 100; // Mettre à jour selon TaskManager
                 $rewardMessage = ' +' . formatFCFA($reward) . ' crédités !';

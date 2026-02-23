@@ -36,6 +36,7 @@ $allowed = [
     'manage_users',
     'manage_companies',
     'manage_withdrawals',
+    'manage_tasks',
     'system_stats',
 
     // Documentation

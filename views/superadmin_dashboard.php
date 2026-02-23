@@ -55,6 +55,8 @@ $topTransactions = $pdo->query('
                     <a href="<?= url('index.php?page=manage_users') ?>" class="btn btn-sm btn-primary"><i
                             class="bi bi-people me-1"></i>Gérer
                         Utilisateurs</a>
+                    <a href="<?= url('index.php?page=manage_tasks') ?>" class="btn btn-sm btn-warning"><i
+                            class="bi bi-list-check me-1"></i>Gérer Tâches</a>
                     <a href="<?= url('index.php?page=home') ?>" class="btn btn-sm btn-outline-secondary">Accueil</a>
                 </div>
             </div>

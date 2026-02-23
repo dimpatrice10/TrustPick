@@ -320,7 +320,7 @@ class PaymentManager
 
             if (!$checkTask && $amount >= Settings::getInt('min_deposit', 10)) {
                 $result = TaskManager::completeTask($userId, 'deposit_5000', $this->pdo);
-                
+
                 // Notification de dépôt (indépendante de la tâche)
                 $this->pdo->prepare("
                     INSERT INTO notifications (user_id, type, title, message, created_at)

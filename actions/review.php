@@ -45,7 +45,7 @@ try {
     if ($canExecute['can_execute']) {
         // Compléter la tâche via TaskManager (qui gère sa propre transaction et récompense)
         $result = TaskManager::completeTask($user_id, 'leave_review', $pdo);
-        
+
         if ($result['success']) {
             addToast('success', 'Avis publié avec succès ! +' . formatFCFA(200) . ' ajoutés à votre solde.');
         } else {

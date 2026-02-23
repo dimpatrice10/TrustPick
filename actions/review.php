@@ -35,68 +35,30 @@ try {
         redirect(url('index.php?page=product&id=' . $product_id));
     }
 
-    // Vérifier si l'utilisateur peut exécuter cette tâche (ordre respecté)
-    $canExecute = TaskManager::canExecuteTask($user_id, 'leave_review', $pdo);
-
-    $pdo->beginTransaction();
-
-    // Créer l'avis
+    // Créer l'avis (toujours autorisé, avec ou sans récompense)
     $stmt = $pdo->prepare('INSERT INTO reviews (product_id,user_id,rating,title,body,created_at) VALUES (?,?,?,?,?,NOW())');
     $stmt->execute([$product_id, $user_id, $rating, $title, $body]);
 
-    $reward = 500;
-    $message = 'Avis publié avec succès !';
+    // Vérifier si l'utilisateur peut exécuter cette tâche pour la récompense
+    $canExecute = TaskManager::canExecuteTask($user_id, 'leave_review', $pdo);
 
     if ($canExecute['can_execute']) {
-        // Récompense pour avis: 500 FCFA
-        $pdo->prepare('UPDATE users SET balance = balance + ? WHERE id = ?')->execute([$reward, $user_id]);
-
-        // Récupérer nouveau solde
-        $balanceStmt = $pdo->prepare('SELECT balance FROM users WHERE id = ?');
-        $balanceStmt->execute([$user_id]);
-        $newBalance = $balanceStmt->fetchColumn();
-
-        // Enregistrer transaction avec balance_after
-        $stmt = $pdo->prepare("
-            INSERT INTO transactions (user_id, type, amount, description, reference_type, balance_after, created_at)
-            VALUES (?, 'reward', ?, 'Avis posté sur produit', 'review', ?, NOW())
-        ");
-        $stmt->execute([$user_id, $reward, $newBalance]);
-
-        // Compléter la tâche
-        TaskManager::completeTask($user_id, 'leave_review', $pdo);
-
-        // Mettre à jour la session
-        $_SESSION['balance'] = $newBalance;
-
-        // Créer notification
-        $stmt = $pdo->prepare("
-            INSERT INTO notifications (user_id, title, message, type, created_at)
-            VALUES (?, 'Avis publié', ?, 'reward', NOW())
-        ");
-        $stmt->execute([$user_id, 'Merci pour votre avis ! +' . formatFCFA($reward) . ' crédités.']);
-
-        $message .= ' +' . formatFCFA($reward) . ' ajoutés à votre solde.';
-        addToast('success', $message);
+        // Compléter la tâche via TaskManager (qui gère sa propre transaction et récompense)
+        $result = TaskManager::completeTask($user_id, 'leave_review', $pdo);
+        
+        if ($result['success']) {
+            addToast('success', 'Avis publié avec succès ! +' . formatFCFA(200) . ' ajoutés à votre solde.');
+        } else {
+            addToast('success', 'Avis publié avec succès !');
+        }
     } else {
-        // Avis publié mais pas de récompense (tâches précédentes non complétées)
-        $stmt = $pdo->prepare("
-            INSERT INTO notifications (user_id, title, message, type, created_at)
-            VALUES (?, 'Avis publié', ?, 'system', NOW())
-        ");
-        $stmt->execute([$user_id, 'Votre avis a été publié. ' . $canExecute['message']]);
-
-        addToast('warning', $message . ' ' . $canExecute['message']);
+        // Avis publié mais sans récompense de tâche
+        addToast('success', 'Avis publié avec succès ! ' . $canExecute['message']);
     }
-
-    $pdo->commit();
 
     redirect(url('index.php?page=product&id=' . $product_id));
 
 } catch (Exception $e) {
-    if ($pdo->inTransaction()) {
-        $pdo->rollBack();
-    }
     addToast('error', 'Erreur lors de la publication: ' . $e->getMessage());
     redirect(url('index.php?page=product&id=' . $product_id));
 }

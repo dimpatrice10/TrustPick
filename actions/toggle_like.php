@@ -1,7 +1,7 @@
 <?php
 /**
  * TrustPick V2 - Action: Toggle Like/Unlike sur un avis
- * Compatible avec review_likes OU review_reactions
+ * Utilise review_reactions (table principale, cohérent avec like_review.php)
  */
 
 if (session_status() === PHP_SESSION_NONE) {
@@ -61,63 +61,33 @@ try {
         exit;
     }
 
-    // Déterminer quelle table utiliser (review_likes ou review_reactions)
-    $useReviewLikes = true;
-    try {
-        $pdo->query('SELECT 1 FROM review_likes LIMIT 1');
-    } catch (Exception $e) {
-        $useReviewLikes = false;
-    }
+    // Toujours utiliser review_reactions (cohérent avec like_review.php)
+    $checkStmt = $pdo->prepare('SELECT id, reaction_type FROM review_reactions WHERE user_id = ? AND review_id = ?');
+    $checkStmt->execute([$user_id, $review_id]);
+    $existingReaction = $checkStmt->fetch();
 
-    if ($useReviewLikes) {
-        // Utiliser review_likes (table simple)
-        $checkStmt = $pdo->prepare('SELECT id FROM review_likes WHERE user_id = ? AND review_id = ?');
-        $checkStmt->execute([$user_id, $review_id]);
-        $existingLike = $checkStmt->fetch();
-
-        if ($existingLike) {
-            // UNLIKE
-            $pdo->prepare('DELETE FROM review_likes WHERE id = ?')->execute([$existingLike['id']]);
+    if ($existingReaction) {
+        if ($existingReaction['reaction_type'] === 'like') {
+            // UNLIKE : retirer le like
+            $pdo->prepare('DELETE FROM review_reactions WHERE id = ?')->execute([$existingReaction['id']]);
             $pdo->prepare('UPDATE reviews SET likes_count = GREATEST(likes_count - 1, 0) WHERE id = ?')
                 ->execute([$review_id]);
             $action = 'unliked';
         } else {
-            // LIKE
-            $pdo->prepare('INSERT INTO review_likes (user_id, review_id, created_at) VALUES (?, ?, NOW())')
-                ->execute([$user_id, $review_id]);
-            $pdo->prepare('UPDATE reviews SET likes_count = likes_count + 1 WHERE id = ?')
+            // Changer dislike en like
+            $pdo->prepare("UPDATE review_reactions SET reaction_type = 'like' WHERE id = ?")
+                ->execute([$existingReaction['id']]);
+            $pdo->prepare('UPDATE reviews SET likes_count = likes_count + 1, dislikes_count = GREATEST(dislikes_count - 1, 0) WHERE id = ?')
                 ->execute([$review_id]);
             $action = 'liked';
         }
     } else {
-        // Utiliser review_reactions (table existante)
-        $checkStmt = $pdo->prepare('SELECT id, reaction_type FROM review_reactions WHERE user_id = ? AND review_id = ?');
-        $checkStmt->execute([$user_id, $review_id]);
-        $existingReaction = $checkStmt->fetch();
-
-        if ($existingReaction) {
-            if ($existingReaction['reaction_type'] === 'like') {
-                // UNLIKE
-                $pdo->prepare('DELETE FROM review_reactions WHERE id = ?')->execute([$existingReaction['id']]);
-                $pdo->prepare('UPDATE reviews SET likes_count = GREATEST(likes_count - 1, 0) WHERE id = ?')
-                    ->execute([$review_id]);
-                $action = 'unliked';
-            } else {
-                // Changer dislike en like
-                $pdo->prepare("UPDATE review_reactions SET reaction_type = 'like' WHERE id = ?")
-                    ->execute([$existingReaction['id']]);
-                $pdo->prepare('UPDATE reviews SET likes_count = likes_count + 1, dislikes_count = GREATEST(dislikes_count - 1, 0) WHERE id = ?')
-                    ->execute([$review_id]);
-                $action = 'liked';
-            }
-        } else {
-            // Nouveau LIKE
-            $pdo->prepare("INSERT INTO review_reactions (review_id, user_id, reaction_type, created_at) VALUES (?, ?, 'like', NOW())")
-                ->execute([$review_id, $user_id]);
-            $pdo->prepare('UPDATE reviews SET likes_count = likes_count + 1 WHERE id = ?')
-                ->execute([$review_id]);
-            $action = 'liked';
-        }
+        // Nouveau LIKE
+        $pdo->prepare("INSERT INTO review_reactions (review_id, user_id, reaction_type, created_at) VALUES (?, ?, 'like', NOW())")
+            ->execute([$review_id, $user_id]);
+        $pdo->prepare('UPDATE reviews SET likes_count = likes_count + 1 WHERE id = ?')
+            ->execute([$review_id]);
+        $action = 'liked';
     }
 
     $reward = 0;
@@ -128,21 +98,26 @@ try {
         $canExecute = TaskManager::canExecuteTask($user_id, 'like_review', $pdo);
 
         if ($canExecute['can_execute']) {
-            // Déléguer la récompense à TaskManager
             $result = TaskManager::completeTask($user_id, 'like_review', $pdo);
 
             if ($result['success']) {
-                $reward = 100; // Mettre à jour selon TaskManager
-                $rewardMessage = ' +' . formatFCFA($reward) . ' crédités !';
+                $reward = $result['reward'] ?? 0;
+                if ($reward > 0) {
+                    $rewardMessage = ' +' . formatFCFA($reward) . ' crédités !';
+                }
             }
         }
 
-        // Notification pour l'auteur de l'avis
-        if ($review['user_id'] != $user_id) {
-            $pdo->prepare("
-                INSERT INTO notifications (user_id, type, title, message, created_at)
-                VALUES (?, 'system', 'Nouveau like', 'Votre avis a reçu un nouveau like !', NOW())
-            ")->execute([$review['user_id']]);
+        // Notification pour l'auteur de l'avis (non bloquante)
+        try {
+            if ($review['user_id'] != $user_id) {
+                $pdo->prepare("
+                    INSERT INTO notifications (user_id, type, title, message, created_at)
+                    VALUES (?, 'system', 'Nouveau like', 'Votre avis a reçu un nouveau like !', NOW())
+                ")->execute([$review['user_id']]);
+            }
+        } catch (Exception $notifErr) {
+            // Ne pas bloquer si la notification échoue
         }
     }
 

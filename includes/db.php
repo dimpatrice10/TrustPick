@@ -40,7 +40,18 @@ class Database
             $this->pdo = new PDO($dsn, $config['db_user'], $config['db_pass'], $options);
         } catch (Exception $e) {
             http_response_code(500);
-            echo 'Database connection failed: ' . htmlspecialchars($e->getMessage());
+            // Si la requête attend du JSON (AJAX), répondre en JSON
+            $isAjax = (
+                (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false) ||
+                (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') ||
+                (isset($_SERVER['CONTENT_TYPE']) && strpos($_SERVER['CONTENT_TYPE'], 'application/x-www-form-urlencoded') !== false && isset($_SERVER['HTTP_REFERER']))
+            );
+            if ($isAjax) {
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode(['status' => 'error', 'success' => false, 'message' => 'Service temporairement indisponible. Réessayez dans quelques instants.']);
+            } else {
+                echo 'Database connection failed: ' . htmlspecialchars($e->getMessage());
+            }
             exit;
         }
     }

@@ -405,7 +405,7 @@ try {
                         $checkReview->execute([$newUserId, $productId]);
 
                         if (!$checkReview->fetch()) {
-                            $rating = self::weightedRating();
+                            $rating = weightedRating();
                             $title = $reviewTitles[$rating][array_rand($reviewTitles[$rating])];
                             $body = $reviewBodies[$rating][array_rand($reviewBodies[$rating])];
 

@@ -2,10 +2,32 @@
 /**
  * TrustPick V2 - Configuration
  * Compatible MySQL (InfinityFree, XAMPP) et PostgreSQL (Render)
+ * 
+ * Ordre de résolution des credentials :
+ * 1. Fichier .env (si présent)
+ * 2. Détection automatique InfinityFree (hostname contient .infinityfree. ou .ct.ws)
+ * 3. Variables d'environnement système
+ * 4. Valeurs par défaut développement (XAMPP local)
  */
 
 // Charger la fonction tp_env() depuis un fichier séparé (évite les redéclarations)
 require_once __DIR__ . '/env.php';
+
+// ── Détection automatique de l'environnement InfinityFree ──
+// Si pas de .env ET qu'on est sur un serveur InfinityFree, utiliser les credentials hardcodés
+$isInfinityFree = false;
+$serverName = $_SERVER['SERVER_NAME'] ?? $_SERVER['HTTP_HOST'] ?? '';
+if (
+    strpos($serverName, '.infinityfree.') !== false ||
+    strpos($serverName, '.ct.ws') !== false ||
+    strpos($serverName, '.epizy.com') !== false ||
+    strpos($serverName, '.rf.gd') !== false
+) {
+    $isInfinityFree = true;
+}
+
+// Vérifier si le .env existe réellement
+$envFileExists = file_exists(__DIR__ . '/../.env');
 
 // Détection du driver de base de données
 // DATABASE_URL ou PGHOST = PostgreSQL (Render), sinon MySQL (InfinityFree/XAMPP)
@@ -27,8 +49,17 @@ if ($databaseUrl) {
     $dbUser = tp_env('PGUSER', 'postgres');
     $dbPass = tp_env('PGPASSWORD', '');
     $dbDriver = 'pgsql';
+} elseif ($isInfinityFree && !$envFileExists) {
+    // ── FALLBACK InfinityFree : credentials en dur si .env absent ──
+    // Ces valeurs proviennent du panel InfinityFree — À REMPLACER par les vraies
+    $dbHost = 'sql106.infinityfree.com';
+    $dbPort = 3306;
+    $dbName = 'if0_41221351_trustpick';
+    $dbUser = 'if0_41221351';
+    $dbPass = 'IUPuYZ9piT1KGMd';
+    $dbDriver = 'mysql';
 } else {
-    // MySQL (InfinityFree / XAMPP / hébergements classiques)
+    // MySQL standard (.env lu OU local XAMPP)
     $dbHost = tp_env('DB_HOST', tp_env('MYSQL_HOST', '127.0.0.1'));
     $dbPort = tp_env('DB_PORT', tp_env('MYSQL_PORT', 3306));
     $dbName = tp_env('DB_NAME', tp_env('MYSQL_DATABASE', 'trustpick_v2'));
@@ -44,6 +75,11 @@ return [
     'db_user' => $dbUser,
     'db_pass' => $dbPass,
     'db_port' => $dbPort,
+
+    // Métadonnées utiles pour le debug
+    '_env_file_exists' => $envFileExists,
+    '_is_infinityfree' => $isInfinityFree,
+    '_config_source' => $envFileExists ? '.env' : ($isInfinityFree ? 'infinityfree_fallback' : 'defaults_local'),
 
     'payment' => [
         'mesomb' => [

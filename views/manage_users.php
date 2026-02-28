@@ -23,7 +23,6 @@ $users = $pdo->query('
     ORDER BY created_at DESC
 ')->fetchAll();
 
-include __DIR__ . '/layouts/header.php';
 ?>
 
 <main class="container fade-up" style="padding:40px 20px;max-width:1200px;margin:0 auto">
@@ -76,34 +75,34 @@ include __DIR__ . '/layouts/header.php';
                 </thead>
                 <tbody>
                     <?php foreach ($users as $u): ?>
-                        <tr style="border-bottom:1px solid #e0e4e8">
-                            <td style="padding:12px">
-                                <strong><?= clean($u['name']) ?></strong><br>
-                                <small style="color:#6c757d">Inscrit <?= formatRelativeTime($u['created_at']) ?></small>
-                            </td>
-                            <td style="padding:12px">
-                                <code style="background:#f1f5f9;padding:4px 8px;border-radius:4px;font-size:12px">
+                    <tr style="border-bottom:1px solid #e0e4e8">
+                        <td style="padding:12px">
+                            <strong><?= clean($u['name']) ?></strong><br>
+                            <small style="color:#6c757d">Inscrit <?= formatRelativeTime($u['created_at']) ?></small>
+                        </td>
+                        <td style="padding:12px">
+                            <code style="background:#f1f5f9;padding:4px 8px;border-radius:4px;font-size:12px">
                               <?= $u['cau'] ?>
                             </code>
-                            </td>
-                            <td style="padding:12px"><?= clean($u['phone']) ?></td>
-                            <td style="padding:12px"><?= roleBadge($u['role']) ?></td>
-                            <td style="padding:12px"><strong><?= formatFCFA($u['balance']) ?></strong></td>
-                            <td style="padding:12px">
-                                <?= $u['is_active']
+                        </td>
+                        <td style="padding:12px"><?= clean($u['phone']) ?></td>
+                        <td style="padding:12px"><?= roleBadge($u['role']) ?></td>
+                        <td style="padding:12px"><strong><?= formatFCFA($u['balance']) ?></strong></td>
+                        <td style="padding:12px">
+                            <?= $u['is_active']
                                     ? '<span class="badge bg-success">Actif</span>'
                                     : '<span class="badge bg-danger">Inactif</span>' ?>
-                            </td>
-                            <td style="padding:12px">
-                                <form action="<?= url('actions/toggle_user.php') ?>" method="POST" style="display:inline">
-                                    <input type="hidden" name="user_id" value="<?= $u['id'] ?>">
-                                    <button type="submit"
-                                        style="padding:6px 12px;border:1px solid #e0e4e8;background:white;border-radius:6px;cursor:pointer;font-size:13px">
-                                        <?= $u['is_active'] ? '<i class="bi bi-x-circle me-1"></i>Désactiver' : '<i class="bi bi-check-circle me-1"></i>Activer' ?>
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
+                        </td>
+                        <td style="padding:12px">
+                            <form action="<?= url('actions/toggle_user.php') ?>" method="POST" style="display:inline">
+                                <input type="hidden" name="user_id" value="<?= $u['id'] ?>">
+                                <button type="submit"
+                                    style="padding:6px 12px;border:1px solid #e0e4e8;background:white;border-radius:6px;cursor:pointer;font-size:13px">
+                                    <?= $u['is_active'] ? '<i class="bi bi-x-circle me-1"></i>Désactiver' : '<i class="bi bi-check-circle me-1"></i>Activer' ?>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
                     <?php endforeach; ?>
                 </tbody>
             </table>
@@ -157,5 +156,3 @@ include __DIR__ . '/layouts/header.php';
     </div>
 
 </main>
-
-<?php include __DIR__ . '/layouts/footer.php'; ?>

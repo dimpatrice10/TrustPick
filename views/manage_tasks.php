@@ -154,8 +154,8 @@ SessionManager::requireRole('super_admin', 'index.php?page=login');
                             <div class="card bg-light border-0">
                                 <div class="card-body py-2 px-3">
                                     <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" id="taskIsDaily"
-                                            name="is_daily" checked>
+                                        <input class="form-check-input" type="checkbox" id="taskIsDaily" name="is_daily"
+                                            checked>
                                         <label class="form-check-label fw-semibold" for="taskIsDaily">
                                             <i class="bi bi-calendar-day me-1"></i>Quotidienne
                                         </label>
@@ -265,68 +265,68 @@ SessionManager::requireRole('super_admin', 'index.php?page=login');
 <!-- JavaScript : Logique CRUD                                     -->
 <!-- ══════════════════════════════════════════════════════════════ -->
 <script>
-const API_URL = '<?= url("actions/manage_task.php") ?>';
-let taskFormModal, deleteModalInstance;
-let deleteTargetId = null;
+    const API_URL = '<?= url("actions/manage_task.php") ?>';
+    let taskFormModal, deleteModalInstance;
+    let deleteTargetId = null;
 
-document.addEventListener('DOMContentLoaded', () => {
-    taskFormModal = new bootstrap.Modal(document.getElementById('taskFormModal'));
-    deleteModalInstance = new bootstrap.Modal(document.getElementById('deleteModal'));
-    loadTasks();
-});
-
-// ── Charger la liste des tâches ──
-function loadTasks() {
-    const body = document.getElementById('tasksBody');
-    body.innerHTML = '<tr><td colspan="12" class="text-center py-4 text-muted"><div class="spinner-border spinner-border-sm me-2"></div>Chargement...</td></tr>';
-
-    fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: 'action=list'
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (!data.success) {
-            body.innerHTML = `<tr><td colspan="12" class="text-center py-4 text-danger">${data.message}</td></tr>`;
-            return;
-        }
-
-        const tasks = data.tasks;
-        document.getElementById('taskCount').textContent = tasks.length + ' tâche' + (tasks.length > 1 ? 's' : '');
-
-        if (tasks.length === 0) {
-            body.innerHTML = '<tr><td colspan="12" class="text-center py-4 text-muted">Aucune tâche configurée</td></tr>';
-            return;
-        }
-
-        body.innerHTML = tasks.map(t => renderTaskRow(t)).join('');
-    })
-    .catch(err => {
-        body.innerHTML = `<tr><td colspan="12" class="text-center py-4 text-danger">Erreur de chargement: ${err.message}</td></tr>`;
+    document.addEventListener('DOMContentLoaded', () => {
+        taskFormModal = new bootstrap.Modal(document.getElementById('taskFormModal'));
+        deleteModalInstance = new bootstrap.Modal(document.getElementById('deleteModal'));
+        loadTasks();
     });
-}
 
-// ── Générer une ligne du tableau ──
-function renderTaskRow(t) {
-    const boolToggle = (field, value, label) => {
-        const checked = value == 1 || value === true ? 'checked' : '';
-        return `<div class="form-check form-switch d-flex justify-content-center mb-0">
+    // ── Charger la liste des tâches ──
+    function loadTasks() {
+        const body = document.getElementById('tasksBody');
+        body.innerHTML = '<tr><td colspan="12" class="text-center py-4 text-muted"><div class="spinner-border spinner-border-sm me-2"></div>Chargement...</td></tr>';
+
+        fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'action=list'
+        })
+            .then(r => r.json())
+            .then(data => {
+                if (!data.success) {
+                    body.innerHTML = `<tr><td colspan="12" class="text-center py-4 text-danger">${data.message}</td></tr>`;
+                    return;
+                }
+
+                const tasks = data.tasks;
+                document.getElementById('taskCount').textContent = tasks.length + ' tâche' + (tasks.length > 1 ? 's' : '');
+
+                if (tasks.length === 0) {
+                    body.innerHTML = '<tr><td colspan="12" class="text-center py-4 text-muted">Aucune tâche configurée</td></tr>';
+                    return;
+                }
+
+                body.innerHTML = tasks.map(t => renderTaskRow(t)).join('');
+            })
+            .catch(err => {
+                body.innerHTML = `<tr><td colspan="12" class="text-center py-4 text-danger">Erreur de chargement: ${err.message}</td></tr>`;
+            });
+    }
+
+    // ── Générer une ligne du tableau ──
+    function renderTaskRow(t) {
+        const boolToggle = (field, value, label) => {
+            const checked = value == 1 || value === true ? 'checked' : '';
+            return `<div class="form-check form-switch d-flex justify-content-center mb-0">
             <input class="form-check-input" type="checkbox" ${checked} 
                    onchange="toggleField(${t.id}, '${field}')" title="${label}">
         </div>`;
-    };
+        };
 
-    const period = (t.is_available_anytime == 1 || t.is_available_anytime === true)
-        ? '<span class="badge bg-success-subtle text-success">Permanent</span>'
-        : (t.start_date && t.end_date
-            ? `<small>${formatDate(t.start_date)}<br>→ ${formatDate(t.end_date)}</small>`
-            : '<span class="badge bg-warning-subtle text-warning">Non défini</span>');
+        const period = (t.is_available_anytime == 1 || t.is_available_anytime === true)
+            ? '<span class="badge bg-success-subtle text-success">Permanent</span>'
+            : (t.start_date && t.end_date
+                ? `<small>${formatDate(t.start_date)}<br>→ ${formatDate(t.end_date)}</small>`
+                : '<span class="badge bg-warning-subtle text-warning">Non défini</span>');
 
-    const reward = Number(t.reward_amount).toLocaleString('fr-FR') + ' F';
-    const rowClass = (t.is_active == 0 || t.is_active === false) ? 'table-secondary opacity-75' : '';
+        const reward = Number(t.reward_amount).toLocaleString('fr-FR') + ' F';
+        const rowClass = (t.is_active == 0 || t.is_active === false) ? 'table-secondary opacity-75' : '';
 
-    return `<tr class="${rowClass}" data-id="${t.id}">
+        return `<tr class="${rowClass}" data-id="${t.id}">
         <td><span class="badge bg-secondary">${t.task_order || '-'}</span></td>
         <td>
             <div class="fw-semibold">${escHtml(t.task_name)}</div>
@@ -356,246 +356,246 @@ function renderTaskRow(t) {
             </div>
         </td>
     </tr>`;
-}
+    }
 
-// ── Toggle inline ──
-function toggleField(id, field) {
-    fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `action=toggle&id=${id}&field=${field}`
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.success) {
-            showAlert('success', `${fieldLabel(field)} mis à jour.`);
-            // Recharger pour actualiser l'affichage (dates, styles)
-            if (field === 'is_active' || field === 'is_available_anytime') {
+    // ── Toggle inline ──
+    function toggleField(id, field) {
+        fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `action=toggle&id=${id}&field=${field}`
+        })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert('success', `${fieldLabel(field)} mis à jour.`);
+                    // Recharger pour actualiser l'affichage (dates, styles)
+                    if (field === 'is_active' || field === 'is_available_anytime') {
+                        loadTasks();
+                    }
+                } else {
+                    showAlert('danger', data.message);
+                    loadTasks(); // Reverser le toggle
+                }
+            })
+            .catch(err => {
+                showAlert('danger', 'Erreur réseau.');
                 loadTasks();
-            }
-        } else {
-            showAlert('danger', data.message);
-            loadTasks(); // Reverser le toggle
-        }
-    })
-    .catch(err => {
-        showAlert('danger', 'Erreur réseau.');
-        loadTasks();
-    });
-}
+            });
+    }
 
-// ── Ouvrir le formulaire (création) ──
-function openTaskForm() {
-    document.getElementById('taskFormLabel').textContent = 'Nouvelle Tâche';
-    document.getElementById('taskSubmitText').textContent = 'Créer la tâche';
-    document.getElementById('taskForm').reset();
-    document.getElementById('taskId').value = '';
-    document.getElementById('taskIsActive').checked = true;
-    document.getElementById('taskIsDaily').checked = true;
-    document.getElementById('taskIsRepeatable').checked = true;
-    document.getElementById('taskIsAnytime').checked = true;
-    document.getElementById('taskIsIgnorable').checked = false;
-    document.getElementById('formErrors').classList.add('d-none');
-    toggleDateFields();
-    taskFormModal.show();
-}
-
-// ── Ouvrir le formulaire (édition) ──
-function editTask(id) {
-    fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `action=get&id=${id}`
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (!data.success) {
-            showAlert('danger', data.message);
-            return;
-        }
-        const t = data.task;
-        document.getElementById('taskFormLabel').textContent = 'Modifier la Tâche';
-        document.getElementById('taskSubmitText').textContent = 'Enregistrer';
-        document.getElementById('taskId').value = t.id;
-        document.getElementById('taskCode').value = t.task_code;
-        document.getElementById('taskName').value = t.task_name;
-        document.getElementById('taskDescription').value = t.description || '';
-        document.getElementById('taskReward').value = t.reward_amount;
-        document.getElementById('taskOrder').value = t.task_order || 0;
-        document.getElementById('taskIsActive').checked = t.is_active == 1;
-        document.getElementById('taskIsDaily').checked = t.is_daily == 1;
-        document.getElementById('taskIsRepeatable').checked = t.is_repeatable == 1;
-        document.getElementById('taskIsAnytime').checked = t.is_available_anytime == 1;
-        document.getElementById('taskIsIgnorable').checked = t.is_ignorable == 1;
-        document.getElementById('taskStartDate').value = t.start_date || '';
-        document.getElementById('taskEndDate').value = t.end_date || '';
+    // ── Ouvrir le formulaire (création) ──
+    function openTaskForm() {
+        document.getElementById('taskFormLabel').textContent = 'Nouvelle Tâche';
+        document.getElementById('taskSubmitText').textContent = 'Créer la tâche';
+        document.getElementById('taskForm').reset();
+        document.getElementById('taskId').value = '';
+        document.getElementById('taskIsActive').checked = true;
+        document.getElementById('taskIsDaily').checked = true;
+        document.getElementById('taskIsRepeatable').checked = true;
+        document.getElementById('taskIsAnytime').checked = true;
+        document.getElementById('taskIsIgnorable').checked = false;
         document.getElementById('formErrors').classList.add('d-none');
         toggleDateFields();
         taskFormModal.show();
-    })
-    .catch(err => showAlert('danger', 'Erreur réseau: ' + err.message));
-}
-
-// ── Enregistrer (Créer / Modifier) ──
-function saveTask(e) {
-    e.preventDefault();
-    const form = document.getElementById('taskForm');
-    const formData = new FormData(form);
-    const id = formData.get('id');
-    formData.set('action', id ? 'update' : 'create');
-
-    // Les checkboxes non cochées ne sont pas envoyées — forcer les valeurs
-    ['is_active', 'is_daily', 'is_repeatable', 'is_available_anytime', 'is_ignorable'].forEach(field => {
-        const el = document.getElementById(fieldToId(field));
-        formData.set(field, el && el.checked ? '1' : '0');
-    });
-
-    // Validation front-end basique
-    const code = formData.get('task_code') || '';
-    const name = formData.get('task_name') || '';
-    const errors = [];
-    if (!/^[a-z0-9_]{3,50}$/.test(code)) errors.push('Code invalide (a-z, 0-9, _ uniquement, 3-50 car.)');
-    if (name.trim().length === 0) errors.push('Le nom est requis.');
-    if (formData.get('is_available_anytime') === '0') {
-        if (!formData.get('start_date') || !formData.get('end_date')) {
-            errors.push('Les dates sont requises si la tâche n\'est pas disponible tout le temps.');
-        }
     }
-    if (errors.length > 0) {
-        const errDiv = document.getElementById('formErrors');
-        errDiv.innerHTML = errors.map(e => `<div>• ${e}</div>`).join('');
-        errDiv.classList.remove('d-none');
+
+    // ── Ouvrir le formulaire (édition) ──
+    function editTask(id) {
+        fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `action=get&id=${id}`
+        })
+            .then(r => r.json())
+            .then(data => {
+                if (!data.success) {
+                    showAlert('danger', data.message);
+                    return;
+                }
+                const t = data.task;
+                document.getElementById('taskFormLabel').textContent = 'Modifier la Tâche';
+                document.getElementById('taskSubmitText').textContent = 'Enregistrer';
+                document.getElementById('taskId').value = t.id;
+                document.getElementById('taskCode').value = t.task_code;
+                document.getElementById('taskName').value = t.task_name;
+                document.getElementById('taskDescription').value = t.description || '';
+                document.getElementById('taskReward').value = t.reward_amount;
+                document.getElementById('taskOrder').value = t.task_order || 0;
+                document.getElementById('taskIsActive').checked = t.is_active == 1;
+                document.getElementById('taskIsDaily').checked = t.is_daily == 1;
+                document.getElementById('taskIsRepeatable').checked = t.is_repeatable == 1;
+                document.getElementById('taskIsAnytime').checked = t.is_available_anytime == 1;
+                document.getElementById('taskIsIgnorable').checked = t.is_ignorable == 1;
+                document.getElementById('taskStartDate').value = t.start_date || '';
+                document.getElementById('taskEndDate').value = t.end_date || '';
+                document.getElementById('formErrors').classList.add('d-none');
+                toggleDateFields();
+                taskFormModal.show();
+            })
+            .catch(err => showAlert('danger', 'Erreur réseau: ' + err.message));
+    }
+
+    // ── Enregistrer (Créer / Modifier) ──
+    function saveTask(e) {
+        e.preventDefault();
+        const form = document.getElementById('taskForm');
+        const formData = new FormData(form);
+        const id = formData.get('id');
+        formData.set('action', id ? 'update' : 'create');
+
+        // Les checkboxes non cochées ne sont pas envoyées — forcer les valeurs
+        ['is_active', 'is_daily', 'is_repeatable', 'is_available_anytime', 'is_ignorable'].forEach(field => {
+            const el = document.getElementById(fieldToId(field));
+            formData.set(field, el && el.checked ? '1' : '0');
+        });
+
+        // Validation front-end basique
+        const code = formData.get('task_code') || '';
+        const name = formData.get('task_name') || '';
+        const errors = [];
+        if (!/^[a-z0-9_]{3,50}$/.test(code)) errors.push('Code invalide (a-z, 0-9, _ uniquement, 3-50 car.)');
+        if (name.trim().length === 0) errors.push('Le nom est requis.');
+        if (formData.get('is_available_anytime') === '0') {
+            if (!formData.get('start_date') || !formData.get('end_date')) {
+                errors.push('Les dates sont requises si la tâche n\'est pas disponible tout le temps.');
+            }
+        }
+        if (errors.length > 0) {
+            const errDiv = document.getElementById('formErrors');
+            errDiv.innerHTML = errors.map(e => `<div>• ${e}</div>`).join('');
+            errDiv.classList.remove('d-none');
+            return false;
+        }
+
+        const btn = document.getElementById('taskSubmitBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Enregistrement...';
+
+        fetch(API_URL, {
+            method: 'POST',
+            body: new URLSearchParams(formData)
+        })
+            .then(r => r.json())
+            .then(data => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-check-lg me-1"></i><span id="taskSubmitText">' + (id ? 'Enregistrer' : 'Créer la tâche') + '</span>';
+
+                if (data.success) {
+                    taskFormModal.hide();
+                    showAlert('success', data.message);
+                    loadTasks();
+                } else {
+                    const errDiv = document.getElementById('formErrors');
+                    errDiv.textContent = data.message;
+                    errDiv.classList.remove('d-none');
+                }
+            })
+            .catch(err => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-check-lg me-1"></i><span id="taskSubmitText">' + (id ? 'Enregistrer' : 'Créer la tâche') + '</span>';
+                showAlert('danger', 'Erreur réseau: ' + err.message);
+            });
+
         return false;
     }
 
-    const btn = document.getElementById('taskSubmitBtn');
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Enregistrement...';
-
-    fetch(API_URL, {
-        method: 'POST',
-        body: new URLSearchParams(formData)
-    })
-    .then(r => r.json())
-    .then(data => {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="bi bi-check-lg me-1"></i><span id="taskSubmitText">' + (id ? 'Enregistrer' : 'Créer la tâche') + '</span>';
-
-        if (data.success) {
-            taskFormModal.hide();
-            showAlert('success', data.message);
-            loadTasks();
-        } else {
-            const errDiv = document.getElementById('formErrors');
-            errDiv.textContent = data.message;
-            errDiv.classList.remove('d-none');
-        }
-    })
-    .catch(err => {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="bi bi-check-lg me-1"></i><span id="taskSubmitText">' + (id ? 'Enregistrer' : 'Créer la tâche') + '</span>';
-        showAlert('danger', 'Erreur réseau: ' + err.message);
-    });
-
-    return false;
-}
-
-// ── Suppression ──
-function deleteTask(id, name, completions) {
-    deleteTargetId = id;
-    document.getElementById('deleteTaskName').textContent = '"' + name + '"';
-    document.getElementById('deleteTaskWarning').textContent = completions > 0
-        ? `⚠️ Cette tâche a ${completions} complétion(s) enregistrée(s) qui seront également supprimées.`
-        : 'Aucune complétion associée.';
-    deleteModalInstance.show();
-}
-
-function confirmDelete() {
-    if (!deleteTargetId) return;
-    const btn = document.getElementById('confirmDeleteBtn');
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Suppression...';
-
-    fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `action=delete&id=${deleteTargetId}`
-    })
-    .then(r => r.json())
-    .then(data => {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="bi bi-trash me-1"></i>Supprimer';
-        deleteModalInstance.hide();
-        if (data.success) {
-            showAlert('success', data.message);
-            loadTasks();
-        } else {
-            showAlert('danger', data.message);
-        }
-    })
-    .catch(err => {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="bi bi-trash me-1"></i>Supprimer';
-        deleteModalInstance.hide();
-        showAlert('danger', 'Erreur réseau.');
-    });
-}
-
-// ── Utilitaires ──
-function toggleDateFields() {
-    const anytime = document.getElementById('taskIsAnytime').checked;
-    const row = document.getElementById('dateFieldsRow');
-    row.classList.toggle('d-none', anytime);
-    if (anytime) {
-        document.getElementById('taskStartDate').value = '';
-        document.getElementById('taskEndDate').value = '';
+    // ── Suppression ──
+    function deleteTask(id, name, completions) {
+        deleteTargetId = id;
+        document.getElementById('deleteTaskName').textContent = '"' + name + '"';
+        document.getElementById('deleteTaskWarning').textContent = completions > 0
+            ? `⚠️ Cette tâche a ${completions} complétion(s) enregistrée(s) qui seront également supprimées.`
+            : 'Aucune complétion associée.';
+        deleteModalInstance.show();
     }
-}
 
-function showAlert(type, message) {
-    const el = document.getElementById('taskAlert');
-    el.className = `alert alert-${type} alert-dismissible fade show`;
-    el.innerHTML = `${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
-    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    setTimeout(() => el.classList.add('d-none'), 5000);
-}
+    function confirmDelete() {
+        if (!deleteTargetId) return;
+        const btn = document.getElementById('confirmDeleteBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Suppression...';
 
-function fieldLabel(f) {
-    const labels = {
-        is_active: 'Statut',
-        is_daily: 'Quotidienne',
-        is_repeatable: 'Répétable',
-        is_available_anytime: 'Disponibilité',
-        is_ignorable: 'Ignorable'
-    };
-    return labels[f] || f;
-}
+        fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `action=delete&id=${deleteTargetId}`
+        })
+            .then(r => r.json())
+            .then(data => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-trash me-1"></i>Supprimer';
+                deleteModalInstance.hide();
+                if (data.success) {
+                    showAlert('success', data.message);
+                    loadTasks();
+                } else {
+                    showAlert('danger', data.message);
+                }
+            })
+            .catch(err => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-trash me-1"></i>Supprimer';
+                deleteModalInstance.hide();
+                showAlert('danger', 'Erreur réseau.');
+            });
+    }
 
-function fieldToId(f) {
-    const map = {
-        is_active: 'taskIsActive',
-        is_daily: 'taskIsDaily',
-        is_repeatable: 'taskIsRepeatable',
-        is_available_anytime: 'taskIsAnytime',
-        is_ignorable: 'taskIsIgnorable'
-    };
-    return map[f] || f;
-}
+    // ── Utilitaires ──
+    function toggleDateFields() {
+        const anytime = document.getElementById('taskIsAnytime').checked;
+        const row = document.getElementById('dateFieldsRow');
+        row.classList.toggle('d-none', anytime);
+        if (anytime) {
+            document.getElementById('taskStartDate').value = '';
+            document.getElementById('taskEndDate').value = '';
+        }
+    }
 
-function escHtml(s) {
-    if (!s) return '';
-    const d = document.createElement('div');
-    d.textContent = s;
-    return d.innerHTML;
-}
+    function showAlert(type, message) {
+        const el = document.getElementById('taskAlert');
+        el.className = `alert alert-${type} alert-dismissible fade show`;
+        el.innerHTML = `${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+        el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        setTimeout(() => el.classList.add('d-none'), 5000);
+    }
 
-function escAttr(s) {
-    return (s || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-}
+    function fieldLabel(f) {
+        const labels = {
+            is_active: 'Statut',
+            is_daily: 'Quotidienne',
+            is_repeatable: 'Répétable',
+            is_available_anytime: 'Disponibilité',
+            is_ignorable: 'Ignorable'
+        };
+        return labels[f] || f;
+    }
 
-function formatDate(d) {
-    if (!d) return '';
-    const parts = d.split('-');
-    return parts[2] + '/' + parts[1] + '/' + parts[0];
-}
+    function fieldToId(f) {
+        const map = {
+            is_active: 'taskIsActive',
+            is_daily: 'taskIsDaily',
+            is_repeatable: 'taskIsRepeatable',
+            is_available_anytime: 'taskIsAnytime',
+            is_ignorable: 'taskIsIgnorable'
+        };
+        return map[f] || f;
+    }
+
+    function escHtml(s) {
+        if (!s) return '';
+        const d = document.createElement('div');
+        d.textContent = s;
+        return d.innerHTML;
+    }
+
+    function escAttr(s) {
+        return (s || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    }
+
+    function formatDate(d) {
+        if (!d) return '';
+        const parts = d.split('-');
+        return parts[2] + '/' + parts[1] + '/' + parts[0];
+    }
 </script>

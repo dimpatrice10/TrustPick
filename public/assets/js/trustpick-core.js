@@ -4,8 +4,12 @@
    ============================================================ */
 
 const TrustPick = {
-  // Configuration API
-  API_BASE: '/TrustPick/api/v2',
+  // Configuration API — détecte automatiquement la base URL
+  API_BASE: (() => {
+    const meta = document.querySelector('meta[name="base-url"]');
+    const base = meta ? meta.content.replace(/\/$/, '') : '';
+    return base + '/api/v2';
+  })(),
 
   // Session utilisateur
   currentUser: null,

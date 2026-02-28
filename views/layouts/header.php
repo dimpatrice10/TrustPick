@@ -24,6 +24,7 @@ $toasts = getToasts();
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#0066cc">
+  <meta name="base-url" content="<?= rtrim(BASE_URL, '/') ?>">
   <meta name="description" content="TrustPick - Gagnez de l'argent en laissant des avis sur vos produits préférés">
 
   <!-- PWA iOS Support -->

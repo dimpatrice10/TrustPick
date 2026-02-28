@@ -97,21 +97,28 @@ async function handleLikeClick(e) {
  * Obtenir l'URL de base du projet
  */
 function getBaseUrl() {
+    // 1. Utiliser la meta tag si disponible (injectée par PHP)
+    const meta = document.querySelector('meta[name="base-url"]');
+    if (meta && meta.content) {
+        return meta.content.endsWith('/') ? meta.content : meta.content + '/';
+    }
+
     const path = window.location.pathname;
-    
-    // Chercher /TrustPick/ dans le chemin
-    const match = path.match(/(.+?\/TrustPick\/)/i);
+
+    // 2. Chercher un sous-dossier connu dans le chemin (dev local)
+    const match = path.match(/(.+?\/(?:TrustPick|trustpick)\/)/i);
     if (match) {
         return match[1];
     }
-    
-    // Fallback: retirer /public/index.php
+
+    // 3. Chercher /public/ dans le chemin
     const publicMatch = path.match(/(.+?)\/public\//i);
     if (publicMatch) {
         return publicMatch[1] + '/';
     }
-    
-    return '/TrustPick/';
+
+    // 4. Production (InfinityFree) : app à la racine du domaine
+    return '/';
 }
 
 /**

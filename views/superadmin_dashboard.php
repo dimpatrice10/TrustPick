@@ -303,20 +303,20 @@ $topTransactions = $pdo->query('
                 </div>
                 <div class="card-body p-0">
                     <?php if (count($recentUsers) > 0): ?>
-                        <div class="list-group list-group-flush">
-                            <?php foreach ($recentUsers as $user): ?>
-                                <div class="list-group-item d-flex justify-content-between align-items-center py-3 px-4">
-                                    <div>
-                                        <p class="mb-1 fw-bold"><?php echo htmlspecialchars($user['name']); ?></p>
-                                        <p class="mb-0 small text-muted"><?php echo htmlspecialchars($user['cau']); ?></p>
-                                    </div>
-                                    <span
-                                        class="badge bg-primary"><?php echo ucfirst(str_replace('_', ' ', $user['role'])); ?></span>
-                                </div>
-                            <?php endforeach; ?>
+                    <div class="list-group list-group-flush">
+                        <?php foreach ($recentUsers as $user): ?>
+                        <div class="list-group-item d-flex justify-content-between align-items-center py-3 px-4">
+                            <div>
+                                <p class="mb-1 fw-bold"><?php echo htmlspecialchars($user['name']); ?></p>
+                                <p class="mb-0 small text-muted"><?php echo htmlspecialchars($user['cau']); ?></p>
+                            </div>
+                            <span
+                                class="badge bg-primary"><?php echo ucfirst(str_replace('_', ' ', $user['role'])); ?></span>
                         </div>
+                        <?php endforeach; ?>
+                    </div>
                     <?php else: ?>
-                        <p class="text-muted text-center py-4">Aucun utilisateur récent</p>
+                    <p class="text-muted text-center py-4">Aucun utilisateur récent</p>
                     <?php endif; ?>
                 </div>
             </div>
@@ -330,21 +330,21 @@ $topTransactions = $pdo->query('
                 </div>
                 <div class="card-body p-0">
                     <?php if (count($companies) > 0): ?>
-                        <div class="list-group list-group-flush">
-                            <?php foreach ($companies as $company): ?>
-                                <div class="list-group-item d-flex justify-content-between align-items-center py-3 px-4">
-                                    <div>
-                                        <p class="mb-1 fw-bold"><?php echo htmlspecialchars($company['name']); ?></p>
-                                        <p class="mb-0 small text-muted"><?php echo htmlspecialchars($company['slug']); ?></p>
-                                    </div>
-                                    <span class="badge <?php echo $company['is_active'] ? 'bg-success' : 'bg-secondary'; ?>">
-                                        <?php echo $company['is_active'] ? '<i class="bi bi-check-circle"></i> Actif' : '<i class="bi bi-x-circle"></i> Inactif'; ?>
-                                    </span>
-                                </div>
-                            <?php endforeach; ?>
+                    <div class="list-group list-group-flush">
+                        <?php foreach ($companies as $company): ?>
+                        <div class="list-group-item d-flex justify-content-between align-items-center py-3 px-4">
+                            <div>
+                                <p class="mb-1 fw-bold"><?php echo htmlspecialchars($company['name']); ?></p>
+                                <p class="mb-0 small text-muted"><?php echo htmlspecialchars($company['slug']); ?></p>
+                            </div>
+                            <span class="badge <?php echo $company['is_active'] ? 'bg-success' : 'bg-secondary'; ?>">
+                                <?php echo $company['is_active'] ? '<i class="bi bi-check-circle"></i> Actif' : '<i class="bi bi-x-circle"></i> Inactif'; ?>
+                            </span>
                         </div>
+                        <?php endforeach; ?>
+                    </div>
                     <?php else: ?>
-                        <p class="text-muted text-center py-4">Aucune entreprise</p>
+                    <p class="text-muted text-center py-4">Aucune entreprise</p>
                     <?php endif; ?>
                 </div>
             </div>
@@ -360,43 +360,43 @@ $topTransactions = $pdo->query('
                 </div>
                 <div class="card-body p-0">
                     <?php if (count($topTransactions) > 0): ?>
-                        <div class="table-responsive">
-                            <table class="table table-sm table-hover mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Utilisateur</th>
-                                        <th>Type</th>
-                                        <th>Montant</th>
-                                        <th>Description</th>
-                                        <th>Date</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php foreach ($topTransactions as $tx): ?>
-                                        <tr>
-                                            <td>
-                                                <strong><?php echo htmlspecialchars($tx['name']); ?></strong>
-                                            </td>
-                                            <td>
-                                                <span class="badge bg-info"><?php echo ucfirst($tx['type']); ?></span>
-                                            </td>
-                                            <td>
-                                                <span class="text-success fw-bold">
-                                                    +<?php echo number_format($tx['amount'], 0); ?> FCFA
-                                                </span>
-                                            </td>
-                                            <td class="text-muted small"><?php echo htmlspecialchars($tx['description']); ?>
-                                            </td>
-                                            <td class="text-muted small">
-                                                <?php echo date('d/m/Y H:i', strtotime($tx['created_at'])); ?>
-                                            </td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                </tbody>
-                            </table>
-                        </div>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Utilisateur</th>
+                                    <th>Type</th>
+                                    <th>Montant</th>
+                                    <th>Description</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($topTransactions as $tx): ?>
+                                <tr>
+                                    <td>
+                                        <strong><?php echo htmlspecialchars($tx['name']); ?></strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info"><?php echo ucfirst($tx['type']); ?></span>
+                                    </td>
+                                    <td>
+                                        <span class="text-success fw-bold">
+                                            +<?php echo number_format($tx['amount'], 0); ?> FCFA
+                                        </span>
+                                    </td>
+                                    <td class="text-muted small"><?php echo htmlspecialchars($tx['description']); ?>
+                                    </td>
+                                    <td class="text-muted small">
+                                        <?php echo date('d/m/Y H:i', strtotime($tx['created_at'])); ?>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
                     <?php else: ?>
-                        <p class="text-muted text-center py-4">Aucune transaction importante</p>
+                    <p class="text-muted text-center py-4">Aucune transaction importante</p>
                     <?php endif; ?>
                 </div>
             </div>
@@ -404,12 +404,12 @@ $topTransactions = $pdo->query('
     </div>
 </main>
 
-<!-- Modal Génération d'Entreprises -->
+<!-- Modal Génération d'Entreprises + Écosystème -->
 <div class="modal fade" id="generateCompaniesModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-success text-white">
-                <h5 class="modal-title"><i class="bi bi-building-add me-2"></i>Générer des Entreprises</h5>
+                <h5 class="modal-title"><i class="bi bi-building-add me-2"></i>Générer un Écosystème</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form id="generateCompaniesForm" action="<?= url('actions/superadmin_generate_companies.php') ?>"
@@ -417,46 +417,94 @@ $topTransactions = $pdo->query('
                 <div class="modal-body">
                     <div class="alert alert-info small">
                         <i class="bi bi-info-circle me-1"></i>
-                        Chaque entreprise sera créée avec un administrateur dédié (CAU auto-généré).
+                        Génère des entreprises, produits, utilisateurs avec avis, likes, tâches complétées et soldes
+                        réalistes.
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">Nombre d'entreprises à générer</label>
-                        <select name="count" class="form-select" required>
-                            <option value="3">3 entreprises</option>
-                            <option value="5" selected>5 entreprises</option>
-                            <option value="10">10 entreprises</option>
-                            <option value="15">15 entreprises</option>
-                            <option value="20">20 entreprises (max)</option>
-                        </select>
-                    </div>
+                    <!-- Section Entreprises -->
+                    <h6 class="fw-bold mb-2"><i class="bi bi-building me-1"></i> Entreprises</h6>
 
-                    <div class="mb-3">
-                        <label class="form-label">Secteur d'activité (optionnel)</label>
-                        <select name="sector" class="form-select">
-                            <option value="">Aléatoire (tous secteurs)</option>
-                            <option value="tech">Technologies & Informatique</option>
-                            <option value="commerce">Commerce & Distribution</option>
-                            <option value="services">Services</option>
-                            <option value="industrie">Industrie & Production</option>
-                            <option value="alimentation">Alimentation & Restauration</option>
-                            <option value="mode">Mode & Beauté</option>
-                            <option value="sante">Santé & Bien-être</option>
-                        </select>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Nombre d'entreprises</label>
+                            <select name="count" class="form-select" required>
+                                <option value="3">3 entreprises</option>
+                                <option value="5" selected>5 entreprises</option>
+                                <option value="10">10 entreprises</option>
+                                <option value="15">15 entreprises</option>
+                                <option value="20">20 entreprises (max)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Secteur d'activité</label>
+                            <select name="sector" class="form-select">
+                                <option value="">Aléatoire (tous)</option>
+                                <option value="tech">Technologies</option>
+                                <option value="commerce">Commerce</option>
+                                <option value="services">Services</option>
+                                <option value="industrie">Industrie</option>
+                                <option value="alimentation">Alimentation</option>
+                                <option value="mode">Mode & Beauté</option>
+                                <option value="sante">Santé</option>
+                            </select>
+                        </div>
                     </div>
 
                     <div class="form-check mb-3">
                         <input type="checkbox" name="generate_products" value="1" class="form-check-input"
                             id="genProductsCheck" checked>
                         <label class="form-check-label" for="genProductsCheck">
-                            Générer aussi 5-10 produits par entreprise
+                            <i class="bi bi-box me-1"></i> Générer 5-10 produits par entreprise
                         </label>
+                    </div>
+
+                    <hr>
+
+                    <!-- Section Utilisateurs -->
+                    <h6 class="fw-bold mb-2"><i class="bi bi-people me-1"></i> Utilisateurs & Activité</h6>
+
+                    <div class="form-check mb-3">
+                        <input type="checkbox" name="generate_users" value="1" class="form-check-input"
+                            id="genUsersCheck" checked>
+                        <label class="form-check-label fw-semibold" for="genUsersCheck">
+                            <i class="bi bi-person-plus me-1"></i> Générer des utilisateurs avec activité
+                        </label>
+                    </div>
+
+                    <div id="userOptions">
+                        <div class="mb-3">
+                            <label class="form-label">Nombre d'utilisateurs</label>
+                            <select name="user_count" class="form-select">
+                                <option value="20">20 utilisateurs</option>
+                                <option value="50" selected>50 utilisateurs</option>
+                                <option value="80">80 utilisateurs</option>
+                                <option value="100">100 utilisateurs</option>
+                                <option value="150">150 utilisateurs</option>
+                                <option value="200">200 utilisateurs (max)</option>
+                            </select>
+                        </div>
+
+                        <div class="alert alert-light border small mb-0">
+                            <strong>Chaque utilisateur généré aura :</strong>
+                            <ul class="mb-0 mt-1">
+                                <li><i class="bi bi-check-circle text-success me-1"></i> Tâches complétées (connexion,
+                                    avis, likes, recommandations)</li>
+                                <li><i class="bi bi-star text-warning me-1"></i> Avis sur produits existants ET nouveaux
+                                    (notes réalistes)</li>
+                                <li><i class="bi bi-hand-thumbs-up text-primary me-1"></i> Likes sur avis d'autres
+                                    utilisateurs</li>
+                                <li><i class="bi bi-wallet2 text-info me-1"></i> Solde calculé à partir des récompenses
+                                    de tâches</li>
+                                <li><i class="bi bi-clock-history text-secondary me-1"></i> Historique d'activité sur
+                                    les 30 derniers jours</li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
                     <button type="submit" class="btn btn-success" id="btnGenerateCompanies">
-                        <i class="bi bi-building-add me-1"></i>Générer
+                        <i class="bi bi-lightning me-1"></i>Générer l'écosystème
                     </button>
                 </div>
             </form>
@@ -465,9 +513,14 @@ $topTransactions = $pdo->query('
 </div>
 
 <script>
-    document.getElementById('generateCompaniesForm')?.addEventListener('submit', function (e) {
-        const btn = document.getElementById('btnGenerateCompanies');
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Génération...';
-    });
+// Toggle user options visibility
+document.getElementById('genUsersCheck')?.addEventListener('change', function() {
+    document.getElementById('userOptions').style.display = this.checked ? 'block' : 'none';
+});
+
+document.getElementById('generateCompaniesForm')?.addEventListener('submit', function(e) {
+    const btn = document.getElementById('btnGenerateCompanies');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Génération en cours...';
+});
 </script>

@@ -64,7 +64,7 @@ try {
     ];
 
     // Vérifier quelques tables clés
-    $tables = ['users', 'reviews', 'review_reactions', 'tasks_definitions', 'notifications', 'transactions'];
+    $tables = ['users', 'reviews', 'review_reactions', 'review_likes', 'tasks_definitions', 'notifications', 'transactions'];
     $tableStatus = [];
     foreach ($tables as $table) {
         try {
